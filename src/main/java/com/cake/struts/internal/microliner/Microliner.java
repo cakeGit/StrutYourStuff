@@ -24,6 +24,10 @@ public class Microliner {
         entries.put(id, new MicrolinerEntry(new MicrolinerAABBOutline(box), params));
     }
 
+    public void showOutline(final String id, final MicrolinerOutline outline, final MicrolinerParams params) {
+        entries.put(id, new MicrolinerEntry(outline, params));
+    }
+
     public void tick() {
         entries.entrySet().removeIf(entry -> !entry.getValue().tick());
     }

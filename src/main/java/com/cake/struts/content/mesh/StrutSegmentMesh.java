@@ -50,6 +50,27 @@ public final class StrutSegmentMesh {
         return result;
     }
 
+    public List<StrutMeshQuad> forLength(final float length, final float startOffset) {
+        if (length <= StrutGeometry.EPSILON) {
+            return List.of();
+        }
+
+        final float wrappedOffset = startOffset - Mth.floor(startOffset);
+        if (wrappedOffset <= StrutGeometry.EPSILON) {
+            return forLength(length);
+        }
+
+        final List<StrutMeshQuad> expanded = forLength(length + wrappedOffset);
+        final List<StrutMeshQuad> result = new ArrayList<>(expanded.size());
+        for (final StrutMeshQuad quad : expanded) {
+            final StrutMeshQuad clipped = quad.clipMinZ(wrappedOffset);
+            if (clipped != null) {
+                result.add(clipped.translate(0f, 0f, -wrappedOffset));
+            }
+        }
+        return result;
+    }
+
     public List<StrutMeshQuad> forScaledLength(final float length) {
         final float safeLength = Math.max(length, StrutGeometry.EPSILON);
         final List<StrutMeshQuad> result = new ArrayList<>(baseQuads.size());

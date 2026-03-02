@@ -159,6 +159,46 @@ public final class StrutMeshQuad {
         return new StrutMeshQuad(clipped.toArray(new StrutVertex[0]), sprite, nominalFace, tintIndex, shade);
     }
 
+    public StrutMeshQuad clipMinZ(final float minZ) {
+        float minOriginalZ = Float.POSITIVE_INFINITY;
+        float maxOriginalZ = Float.NEGATIVE_INFINITY;
+        for (final StrutVertex vertex : vertices) {
+            final float z = vertex.position().z;
+            minOriginalZ = Math.min(minOriginalZ, z);
+            maxOriginalZ = Math.max(maxOriginalZ, z);
+        }
+        if (minZ <= minOriginalZ + StrutGeometry.EPSILON) {
+            return this;
+        }
+        if (minZ >= maxOriginalZ - StrutGeometry.EPSILON) {
+            return null;
+        }
+
+        final List<StrutVertex> clipped = new ArrayList<>();
+        for (int i = 0; i < vertices.length; i++) {
+            final StrutVertex current = vertices[i];
+            final StrutVertex next = vertices[(i + 1) % vertices.length];
+
+            final boolean currentInside = current.position().z >= minZ - StrutGeometry.EPSILON;
+            final boolean nextInside = next.position().z >= minZ - StrutGeometry.EPSILON;
+
+            if (currentInside && nextInside) {
+                clipped.add(next);
+            } else if (currentInside) {
+                clipped.add(StrutGeometry.interpolate(current, next, clampT(current, next, minZ)));
+            } else if (nextInside) {
+                clipped.add(StrutGeometry.interpolate(current, next, clampT(current, next, minZ)));
+                clipped.add(next);
+            }
+        }
+
+        if (clipped.size() < 3) {
+            return null;
+        }
+
+        return new StrutMeshQuad(clipped.toArray(new StrutVertex[0]), sprite, nominalFace, tintIndex, shade);
+    }
+
     private float clampT(final StrutVertex current, final StrutVertex next, final float maxZ) {
         final float delta = next.position().z - current.position().z;
         if (Math.abs(delta) < StrutGeometry.EPSILON) {

@@ -21,6 +21,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class BlockyStrutLineGeometry {
 
     private static final float EPSILON = 1e-6f;
+    private static final double SURFACE_OFFSET = (6.0 / 16.0) + 1e-3;
 
     private final int shapeSizeXPixels;
     private final int shapeSizeYPixels;
@@ -45,8 +46,8 @@ public class BlockyStrutLineGeometry {
         this.voxelShapeResolutionPixels = Math.max(1, voxelShapeResolutionPixels);
         this.halfX = (shapeSizeXPixels / 16.0) / 2.0;
         this.halfY = (shapeSizeYPixels / 16.0) / 2.0;
-        this.fromAttachment = Vec3.atCenterOf(from).relative(fromFacing, -0.4);
-        this.toAttachment = Vec3.atCenterOf(to).relative(toFacing, -0.4);
+        this.fromAttachment = Vec3.atCenterOf(from).relative(fromFacing, -SURFACE_OFFSET);
+        this.toAttachment = Vec3.atCenterOf(to).relative(toFacing, -SURFACE_OFFSET);
         this.positions = calculatePositions();
     }
 
@@ -84,12 +85,22 @@ public class BlockyStrutLineGeometry {
         final boolean straightZ = isEpsilon(difference.x) && isEpsilon(difference.y);
 
         if (straightX || straightY || straightZ) {
-            final double minX = straightX ? 0 : 0.5 - halfX;
-            final double maxX = straightX ? 1 : 0.5 + halfX;
-            final double minY = straightY ? 0 : 0.5 - halfY;
-            final double maxY = straightY ? 1 : 0.5 + halfY;
-            final double minZ = straightZ ? 0 : 0.5 - halfX;
-            final double maxZ = straightZ ? 1 : 0.5 + halfX;
+            final double fromX = fromAttachment.x - pos.getX();
+            final double toX = toAttachment.x - pos.getX();
+            final double fromY = fromAttachment.y - pos.getY();
+            final double toY = toAttachment.y - pos.getY();
+            final double fromZ = fromAttachment.z - pos.getZ();
+            final double toZ = toAttachment.z - pos.getZ();
+
+            final double minX = straightX ? Mth.clamp(Math.min(fromX, toX), 0.0, 1.0) : 0.5 - halfX;
+            final double maxX = straightX ? Mth.clamp(Math.max(fromX, toX), 0.0, 1.0) : 0.5 + halfX;
+            final double minY = straightY ? Mth.clamp(Math.min(fromY, toY), 0.0, 1.0) : 0.5 - halfY;
+            final double maxY = straightY ? Mth.clamp(Math.max(fromY, toY), 0.0, 1.0) : 0.5 + halfY;
+            final double minZ = straightZ ? Mth.clamp(Math.min(fromZ, toZ), 0.0, 1.0) : 0.5 - halfX;
+            final double maxZ = straightZ ? Mth.clamp(Math.max(fromZ, toZ), 0.0, 1.0) : 0.5 + halfX;
+            if (minX >= maxX || minY >= maxY || minZ >= maxZ) {
+                return Shapes.empty();
+            }
             return Shapes.create(minX, minY, minZ, maxX, maxY, maxZ);
         }
 
@@ -98,41 +109,42 @@ public class BlockyStrutLineGeometry {
         final double extentZ = Math.abs(halfX * localXDirection.z()) + Math.abs(halfY * localYDirection.z());
 
         final AABB expanded = new AABB(pos).inflate(extentX, extentY, extentZ);
-        final Vec3 scaledFrom = fromAttachment.subtract(difference); //Scale this to ensure shape extends fully to the attachment point;
-        final Vec3 scaledDifference = difference.scale(3);
-        final double[] tBounds = intersectAabbs(scaledFrom, scaledDifference, expanded);
+        final double[] tBounds = intersectAabbs(fromAttachment, difference, expanded);
         if (tBounds == null) return Shapes.empty();
 
         final double tMin = Math.max(0, tBounds[0]);
         final double tMax = Math.min(totalLength, tBounds[1]);
-        if (tMin > tMax) return Shapes.empty();
+        if (tMin > tMax + EPSILON) return Shapes.empty();
 
-        final double dom = Math.max(Math.abs(scaledDifference.x), Math.max(Math.abs(scaledDifference.y), Math.abs(scaledDifference.z)));
-        final double dt = (voxelShapeResolutionPixels / 16.0) / dom;
+        final double dominantAxis = Math.max(Math.abs(difference.x), Math.max(Math.abs(difference.y), Math.abs(difference.z)));
+        final double dt = Math.max((voxelShapeResolutionPixels / 16.0) / Math.max(dominantAxis, EPSILON), EPSILON);
 
         VoxelShape totalShape = Shapes.empty();
         double t = tMin;
-        while (t <= tMax) {
+        while (t <= tMax + EPSILON) {
             final double nextT = Math.min(t + dt, tMax);
-            final double midT = (t + nextT) / 2.0;
+            final Vec3 start = fromAttachment.add(difference.scale(t));
+            final Vec3 end = fromAttachment.add(difference.scale(nextT));
 
-            final Vec3 center = scaledFrom.add(scaledDifference.scale(midT));
-            final double centerX = center.x - pos.getX();
-            final double centerY = center.y - pos.getY();
-            final double centerZ = center.z - pos.getZ();
+            final double startX = start.x - pos.getX();
+            final double startY = start.y - pos.getY();
+            final double startZ = start.z - pos.getZ();
+            final double endX = end.x - pos.getX();
+            final double endY = end.y - pos.getY();
+            final double endZ = end.z - pos.getZ();
 
-            final double minX = Math.max(0, pixelFloor(centerX - extentX));
-            final double maxX = Math.min(1, pixelCeil(centerX + extentX));
-            final double minY = Math.max(0, pixelFloor(centerY - extentY));
-            final double maxY = Math.min(1, pixelCeil(centerY + extentY));
-            final double minZ = Math.max(0, pixelFloor(centerZ - extentZ));
-            final double maxZ = Math.min(1, pixelCeil(centerZ + extentZ));
+            final double minX = Math.max(0, Math.min(startX, endX) - extentX);
+            final double maxX = Math.min(1, Math.max(startX, endX) + extentX);
+            final double minY = Math.max(0, Math.min(startY, endY) - extentY);
+            final double maxY = Math.min(1, Math.max(startY, endY) + extentY);
+            final double minZ = Math.max(0, Math.min(startZ, endZ) - extentZ);
+            final double maxZ = Math.min(1, Math.max(startZ, endZ) + extentZ);
 
             if (minX < maxX && minY < maxY && minZ < maxZ) {
                 totalShape = Shapes.or(totalShape, Shapes.create(minX, minY, minZ, maxX, maxY, maxZ));
             }
 
-            if (t == tMax) break;
+            if (nextT >= tMax - EPSILON) break;
             t = nextT;
         }
 
@@ -156,12 +168,12 @@ public class BlockyStrutLineGeometry {
         final double centerY = center.y - pos.getY();
         final double centerZ = center.z - pos.getZ();
 
-        final double minX = Math.max(0, pixelFloor(centerX - extentX));
-        final double maxX = Math.min(1, pixelCeil(centerX + extentX));
-        final double minY = Math.max(0, pixelFloor(centerY - extentY));
-        final double maxY = Math.min(1, pixelCeil(centerY + extentY));
-        final double minZ = Math.max(0, pixelFloor(centerZ - extentZ));
-        final double maxZ = Math.min(1, pixelCeil(centerZ + extentZ));
+        final double minX = Math.max(0, centerX - extentX);
+        final double maxX = Math.min(1, centerX + extentX);
+        final double minY = Math.max(0, centerY - extentY);
+        final double maxY = Math.min(1, centerY + extentY);
+        final double minZ = Math.max(0, centerZ - extentZ);
+        final double maxZ = Math.min(1, centerZ + extentZ);
 
         if (minX < maxX && minY < maxY && minZ < maxZ) {
             return Shapes.create(minX, minY, minZ, maxX, maxY, maxZ);
@@ -310,16 +322,6 @@ public class BlockyStrutLineGeometry {
 
     private boolean isEpsilon(final Vec3 vector) {
         return isEpsilon(vector.x()) && isEpsilon(vector.y()) && isEpsilon(vector.z());
-    }
-
-    private double pixelFloor(final double value) {
-        final double scaled = (value * 16.0) / voxelShapeResolutionPixels;
-        return (Math.floor(scaled) * voxelShapeResolutionPixels) / 16.0;
-    }
-
-    private double pixelCeil(final double value) {
-        final double scaled = (value * 16.0) / voxelShapeResolutionPixels;
-        return (Math.ceil(scaled) * voxelShapeResolutionPixels) / 16.0;
     }
 
 }

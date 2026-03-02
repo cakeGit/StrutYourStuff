@@ -2,15 +2,19 @@ package com.cake.struts.content;
 
 import com.cake.struts.content.block.StrutBlock;
 import com.cake.struts.content.block.StrutBlockItem;
+import com.cake.struts.content.shape.StrutConnectionShape;
 import com.cake.struts.content.structure.BlockyStrutLineGeometry;
 import com.cake.struts.internal.microliner.Microliner;
 import com.cake.struts.internal.microliner.MicrolinerParams;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.cake.struts.registry.StrutDataComponents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
@@ -18,7 +22,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.VoxelShape;
 import org.joml.Vector3f;
 
 public class StrutPlacementEffects {
@@ -79,10 +82,11 @@ public class StrutPlacementEffects {
         final StrutModelType modelType = resolveModelType(heldItem);
         final BlockyStrutLineGeometry lineGeometry = new BlockyStrutLineGeometry(fromPos, fromFace, targetPos, targetFace, modelType.shapeSizeXPixels(),
                 modelType.shapeSizeYPixels(), modelType.voxelShapeResolutionPixels());
+        final StrutConnectionShape previewShape = resolvePreviewShape(heldItem, lineGeometry);
 
         showAnchorOutline(fromPos, fromFace, "from", outlinerColor.x, outlinerColor.y, outlinerColor.z);
         showAnchorOutline(targetPos, targetFace, "to", outlinerColor.x, outlinerColor.y, outlinerColor.z);
-        showConnectionShape(lineGeometry, outlinerColor.x, outlinerColor.y, outlinerColor.z);
+        showConnectionShape(previewShape, outlinerColor.x, outlinerColor.y, outlinerColor.z);
 
     }
 
@@ -92,21 +96,41 @@ public class StrutPlacementEffects {
         Microliner.get().showAABB("strut_preview_anchor_" + id, worldBounds, new MicrolinerParams(1 / 16f, r, g, b, 1f, 2));
     }
 
-    private static void showConnectionShape(final BlockyStrutLineGeometry lineGeometry, final float r, final float g, final float b) {
-        final BlockPos[] positions = lineGeometry.getPositions();
-        for (int i = 0; i < positions.length; i++) {
-            final BlockPos pos = positions[i];
-            final VoxelShape shape = lineGeometry.getShapeForPosition(pos);
-            if (shape.isEmpty()) {
-                continue;
-            }
-            final int boxCount = shape.toAabbs().size();
-            for (int j = 0; j < boxCount; j++) {
-                final AABB localBox = shape.toAabbs().get(j);
-                final AABB worldBox = localBox.move(pos.getX(), pos.getY(), pos.getZ());
-                Microliner.get().showAABB("strut_preview_shape_" + i + '_' + j, worldBox, new MicrolinerParams(1 / 16f, r, g, b, 1f, 2));
+    private static void showConnectionShape(final StrutConnectionShape shape, final float r, final float g, final float b) {
+        final int color = packColor(r, g, b, 1f);
+        Microliner.get().showOutline("strut_preview_shape", (poseStack, buffer, camera, params) -> {
+            final VertexConsumer consumer = buffer.getBuffer(RenderType.lines());
+            shape.drawOutline(poseStack, consumer, camera, color);
+        }, new MicrolinerParams(1 / 16f, r, g, b, 1f, 2));
+    }
+
+    private static StrutConnectionShape resolvePreviewShape(final ItemStack heldItem, final BlockyStrutLineGeometry lineGeometry) {
+        if (heldItem.getItem() instanceof final BlockItem blockItem && blockItem.getBlock() instanceof final StrutBlock strutBlock) {
+            final CableStrutInfo cableRenderInfo = strutBlock.getCableRenderInfo();
+            if (cableRenderInfo != null) {
+                return StrutConnectionShape.cable(
+                        lineGeometry.getFromAttachment(),
+                        lineGeometry.getToAttachment(),
+                        lineGeometry.getHalfX(),
+                        lineGeometry.getHalfY(),
+                        cableRenderInfo
+                );
             }
         }
+        return new StrutConnectionShape(
+                lineGeometry.getFromAttachment(),
+                lineGeometry.getToAttachment(),
+                lineGeometry.getHalfX(),
+                lineGeometry.getHalfY()
+        );
+    }
+
+    private static int packColor(final float r, final float g, final float b, final float a) {
+        final int alpha = Mth.clamp((int) (a * 255.0f), 0, 255);
+        final int red = Mth.clamp((int) (r * 255.0f), 0, 255);
+        final int green = Mth.clamp((int) (g * 255.0f), 0, 255);
+        final int blue = Mth.clamp((int) (b * 255.0f), 0, 255);
+        return (alpha << 24) | (red << 16) | (green << 8) | blue;
     }
 
     private static StrutModelType resolveModelType(final ItemStack heldItem) {

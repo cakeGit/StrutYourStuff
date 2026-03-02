@@ -8,6 +8,7 @@ import dev.engine_room.flywheel.api.model.Model;
 import dev.engine_room.flywheel.api.visualization.VisualizationContext;
 import dev.engine_room.flywheel.lib.instance.InstanceTypes;
 import dev.engine_room.flywheel.lib.instance.TransformedInstance;
+import dev.engine_room.flywheel.lib.model.ModelUtil;
 import dev.engine_room.flywheel.lib.model.baked.BakedModelBuilder;
 import dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual;
 import net.minecraft.client.Minecraft;
@@ -103,12 +104,13 @@ public class StrutFlywheelVisual extends AbstractBlockEntityVisual<StrutBlockEnt
     private @NotNull Model buildModel(final @NotNull List<BakedQuad> quads) {
         final BakedModel baseModel = Minecraft.getInstance().getBlockRenderer().getBlockModel(blockState);
         final BakedModel model = new StrutBakedModel(baseModel, quads);
-        // StrutBakedModel returns shade=false quads to prevent vanilla BakedModelBufferer from baking
-        // block-face directional shading into vertex colours. We keep the Flywheel builder minimal
-        // to avoid version-specific material function classes during runtime.
+        // StrutBakedModel keeps quads shaded so directional diffuse is baked during model buffering.
+        // Keep Flywheel cardinal lighting disabled here to avoid double-applying diffuse.
+        // Use the BiFunction overload for runtime compatibility with Flywheel builds missing BlockMaterialFunction.
         return new BakedModelBuilder(model)
                 .level(level)
                 .pos(pos)
+                .materialFunc((renderType, ignoredShaded) -> ModelUtil.getMaterial(renderType, false))
                 .build();
     }
 

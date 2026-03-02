@@ -19,21 +19,20 @@ public final class StrutBakedModel extends BakedModelWrapper<BakedModel> {
     private static final List<BakedQuad> EMPTY = List.of();
     private static final ChunkRenderTypeSet RENDER_TYPES = ChunkRenderTypeSet.of(RenderType.solid());
 
-    // Quads with shade=false so that vanilla BakedModelBufferer does not bake block-face directional
-    // shading into vertex colours. Flywheel's fragment shader applies diffuseFromLightDirections
-    // (CardinalLightingMode.ENTITY) in a single pass instead, matching the non-Flywheel BER path.
-    private final List<BakedQuad> unshadedQuads;
+    // Force shade=true so Flywheel's baked-model path keeps directional diffuse consistent with the
+    // non-Flywheel BER path, which always applies diffuse shading for strut quads.
+    private final List<BakedQuad> shadedQuads;
 
     public StrutBakedModel(final BakedModel originalModel, final List<BakedQuad> quads) {
         super(originalModel);
-        this.unshadedQuads = quads.stream()
-                .map(q -> q.isShade() ? new BakedQuad(q.getVertices(), q.getTintIndex(), q.getDirection(), q.getSprite(), false) : q)
+        this.shadedQuads = quads.stream()
+                .map(q -> q.isShade() ? q : new BakedQuad(q.getVertices(), q.getTintIndex(), q.getDirection(), q.getSprite(), true, q.hasAmbientOcclusion()))
                 .toList();
     }
 
     @Override
     public List<BakedQuad> getQuads(final @Nullable BlockState state, final @Nullable Direction side, final RandomSource rand) {
-        return side == null ? unshadedQuads : EMPTY;
+        return side == null ? shadedQuads : EMPTY;
     }
 
     @Override
@@ -48,7 +47,7 @@ public final class StrutBakedModel extends BakedModelWrapper<BakedModel> {
         if (renderType != null && !RENDER_TYPES.contains(renderType)) {
             return EMPTY;
         }
-        return unshadedQuads;
+        return shadedQuads;
     }
 
     @Override

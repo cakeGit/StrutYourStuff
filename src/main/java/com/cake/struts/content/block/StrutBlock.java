@@ -98,16 +98,18 @@ public class StrutBlock extends Block implements SimpleWaterloggedBlock, GirderS
 
     @Override
     public @NotNull VoxelShape getShape(final BlockState state, final @NotNull BlockGetter level, final @NotNull BlockPos pos, final @NotNull CollisionContext context) {
-        return Shapes.empty();
+        return getAttachmentBaseShape(state.getValue(FACING));
     }
 
     @Override
     public @NotNull VoxelShape getCollisionShape(final @NotNull BlockState state, final @NotNull BlockGetter level,
                                                  final @NotNull BlockPos pos, final @NotNull CollisionContext context) {
+        final VoxelShape attachmentShape = getAttachmentBaseShape(state.getValue(FACING));
         if (cableRenderInfo != null) {
-            return Shapes.empty();
+            return attachmentShape;
         }
-        return getStrutShape(level, pos);
+        final VoxelShape strutShape = getStrutShape(level, pos);
+        return strutShape.isEmpty() ? attachmentShape : Shapes.or(attachmentShape, strutShape);
     }
 
     @Nullable
