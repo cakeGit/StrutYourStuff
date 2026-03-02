@@ -1,0 +1,15 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.cake.struts.mixin",
+  "plugin": "com.cake.struts.mixin.compat.create.StrutsCompatMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "StrutRenderSystemAccessor",
+    "compat.create.StrutTransformCompat",
+    "compat.create.StrutWrenchCompat"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

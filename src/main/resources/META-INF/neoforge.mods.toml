@@ -1,0 +1,27 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="MIT"
+
+[[mods]]
+modId="struts"
+version="${mod_version}"
+displayName="Strut Your Stuff"
+authors="Cake"
+description='''Extracted girder strut library for NeoForge.'''
+
+[[mixins]]
+config="struts.mixins.json"
+
+[[dependencies.struts]]
+modId="neoforge"
+type="required"
+versionRange="[21.1,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.struts]]
+modId="create"
+type="optional"
+versionRange="*"
+ordering="NONE"
+side="BOTH"
