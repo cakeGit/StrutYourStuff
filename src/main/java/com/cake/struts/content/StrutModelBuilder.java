@@ -28,6 +28,7 @@ public class StrutModelBuilder extends BakedModelWrapper<BakedModel> {
 
     private static final ModelProperty<GirderStrutModelData> GIRDER_PROPERTY = new ModelProperty<>();
     private static final double SURFACE_OFFSET = (6 / 16f) + 1e-3;
+    public static final double SURFACE_CLIPPING_OFFSET = 10 / 16f + 1e-3;
 
     public StrutModelBuilder(final BakedModel originalModel) {
         super(originalModel);
@@ -39,7 +40,7 @@ public class StrutModelBuilder extends BakedModelWrapper<BakedModel> {
     }
 
     @Override
-    public TriState useAmbientOcclusion(final BlockState state, final ModelData data, final RenderType renderType) {
+    public @NotNull TriState useAmbientOcclusion(final @NotNull BlockState state, final @NotNull ModelData data, final @NotNull RenderType renderType) {
         return TriState.FALSE;
     }
 
@@ -49,7 +50,7 @@ public class StrutModelBuilder extends BakedModelWrapper<BakedModel> {
     }
 
     @Override
-    public List<BakedQuad> getQuads(final BlockState state, final Direction side, final RandomSource rand, final ModelData data, final RenderType renderType) {
+    public @NotNull List<BakedQuad> getQuads(final BlockState state, final Direction side, final @NotNull RandomSource rand, final @NotNull ModelData data, final RenderType renderType) {
         final List<BakedQuad> base = new ArrayList<>(super.getQuads(state, side, rand, data, renderType));
 //        if (renderType != null && renderType != RenderType.solid()) {
 //            return base;
@@ -71,7 +72,7 @@ public class StrutModelBuilder extends BakedModelWrapper<BakedModel> {
     }
 
     @Override
-    public @NotNull ModelData getModelData(final BlockAndTintGetter level, final BlockPos pos, final BlockState state, final ModelData blockEntityData) {
+    public @NotNull ModelData getModelData(final BlockAndTintGetter level, final @NotNull BlockPos pos, final @NotNull BlockState state, final @NotNull ModelData blockEntityData) {
         if (!(level.getBlockEntity(pos) instanceof final StrutBlockEntity blockEntity)) {
             return ModelData.EMPTY;
         }
@@ -110,7 +111,7 @@ public class StrutModelBuilder extends BakedModelWrapper<BakedModel> {
             final Direction facing = state.getValue(StrutBlock.FACING);
             final CableStrutInfo cableRenderInfo = block.getCableRenderInfo();
             final Vec3 blockOrigin = Vec3.atLowerCornerOf(pos);
-            final Vec3 facePoint = Vec3.atCenterOf(pos).relative(facing, -10 / 16f - 1e-3);
+            final Vec3 facePoint = Vec3.atCenterOf(pos).relative(facing, -SURFACE_CLIPPING_OFFSET);
             final Vec3 thisSurface = Vec3.atCenterOf(pos).relative(facing, -SURFACE_OFFSET);
 
             final List<GirderConnection> connections = new ArrayList<>();
@@ -155,45 +156,8 @@ public class StrutModelBuilder extends BakedModelWrapper<BakedModel> {
         }
     }
 
-    static final class GirderConnection {
-        private final Vec3 start;
-        private final Vec3 end;
-        private final double renderLength;
-        private final Vec3 surfacePlanePoint;
-        private final Vec3 surfaceNormal;
-        private final CableStrutInfo cableRenderInfo;
-
-        GirderConnection(final Vec3 start, final Vec3 end, final double renderLength, final Vec3 surfacePlanePoint, final Vec3 surfaceNormal, final CableStrutInfo cableRenderInfo) {
-            this.start = start;
-            this.end = end;
-            this.renderLength = renderLength;
-            this.surfacePlanePoint = surfacePlanePoint;
-            this.surfaceNormal = surfaceNormal;
-            this.cableRenderInfo = cableRenderInfo;
-        }
-
-        Vec3 start() {
-            return start;
-        }
-
-        Vec3 end() {
-            return end;
-        }
-
-        double renderLength() {
-            return renderLength;
-        }
-
-        Vec3 surfacePlanePoint() {
-            return surfacePlanePoint;
-        }
-
-        Vec3 surfaceNormal() {
-            return surfaceNormal;
-        }
-
-        CableStrutInfo cableRenderInfo() {
-            return cableRenderInfo;
-        }
+    public record GirderConnection(Vec3 start, Vec3 end, double renderLength, Vec3 surfacePlanePoint,
+                                   Vec3 surfaceNormal,
+                                   CableStrutInfo cableRenderInfo) {
     }
 }

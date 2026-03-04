@@ -15,6 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
@@ -29,7 +30,7 @@ import org.jetbrains.annotations.Nullable;
 
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED;
 
-public class StrutBlock extends Block implements SimpleWaterloggedBlock, GirderStrutShapedBlock, EntityBlock {
+public abstract class StrutBlock extends Block implements SimpleWaterloggedBlock, GirderStrutShapedBlock, EntityBlock {
 
     public static final DirectionProperty FACING = DirectionalBlock.FACING;
     public static final int MAX_SPAN = 30;
@@ -48,14 +49,16 @@ public class StrutBlock extends Block implements SimpleWaterloggedBlock, GirderS
         this.cableRenderInfo = cableRenderInfo;
     }
 
+    protected abstract BlockEntityType<? extends StrutBlockEntity> getStrutBlockEntityType();
+
     @Override
-    protected BlockState rotate(final BlockState state, final Rotation rotation) {
+    protected @NotNull BlockState rotate(final @NotNull BlockState state, final @NotNull Rotation rotation) {
         return super.rotate(state, rotation)
                 .setValue(FACING, rotation.rotate(state.getValue(FACING)));
     }
 
     @Override
-    protected BlockState mirror(final BlockState state, final Mirror mirror) {
+    protected @NotNull BlockState mirror(final @NotNull BlockState state, final @NotNull Mirror mirror) {
         return super.mirror(state, mirror)
                 .setValue(FACING, mirror.mirror(state.getValue(FACING)));
     }
@@ -70,7 +73,7 @@ public class StrutBlock extends Block implements SimpleWaterloggedBlock, GirderS
     }
 
     @Override
-    protected void tick(final BlockState state, final ServerLevel level, final BlockPos pos, final RandomSource random) {
+    protected void tick(final @NotNull BlockState state, final @NotNull ServerLevel level, final @NotNull BlockPos pos, final @NotNull RandomSource random) {
         rebuildMissingStructureNeighbors(level, pos);
     }
 
@@ -98,13 +101,13 @@ public class StrutBlock extends Block implements SimpleWaterloggedBlock, GirderS
 
     @Override
     public @NotNull VoxelShape getShape(final BlockState state, final @NotNull BlockGetter level, final @NotNull BlockPos pos, final @NotNull CollisionContext context) {
-        return getAttachmentBaseShape(state.getValue(FACING));
+        return getAttachmentBaseShape(state.getValue(FACING), true);
     }
 
     @Override
     public @NotNull VoxelShape getCollisionShape(final @NotNull BlockState state, final @NotNull BlockGetter level,
                                                  final @NotNull BlockPos pos, final @NotNull CollisionContext context) {
-        final VoxelShape attachmentShape = getAttachmentBaseShape(state.getValue(FACING));
+        final VoxelShape attachmentShape = getAttachmentBaseShape(state.getValue(FACING), false);
         if (cableRenderInfo != null) {
             return attachmentShape;
         }
@@ -115,7 +118,7 @@ public class StrutBlock extends Block implements SimpleWaterloggedBlock, GirderS
     @Nullable
     @Override
     public BlockEntity newBlockEntity(final @NotNull BlockPos pos, final @NotNull BlockState state) {
-        return new StrutBlockEntity(pos, state);
+        return new StrutBlockEntity(getStrutBlockEntityType(), pos, state);
     }
 
     @Override
@@ -171,14 +174,14 @@ public class StrutBlock extends Block implements SimpleWaterloggedBlock, GirderS
         this.modelType = modelType;
     }
 
-    public static VoxelShape getAttachmentBaseShape(final Direction facing) {
+    public static VoxelShape getAttachmentBaseShape(final Direction facing, final boolean interaction) {
         return switch (facing.getOpposite()) {
-            case DOWN -> Block.box(3, 0, 3, 13, 1, 13);
-            case UP -> Block.box(3, 15, 3, 13, 16, 13);
-            case NORTH -> Block.box(3, 3, 0, 13, 13, 1);
-            case SOUTH -> Block.box(3, 3, 15, 13, 13, 16);
-            case WEST -> Block.box(0, 3, 3, 1, 13, 13);
-            case EAST -> Block.box(15, 3, 3, 16, 13, 13);
+            case DOWN -> Block.box(3, interaction ? -5 : 0, 3, 13, 1, 13);
+            case UP -> Block.box(3, 15, 3, 13, interaction ? 21 : 16, 13);
+            case NORTH -> Block.box(3, 3, interaction ? -5 : 0, 13, 13, 1);
+            case SOUTH -> Block.box(3, 3, 15, 13, 13, interaction ? 21 : 16);
+            case WEST -> Block.box(interaction ? -5 : 0, 3, 3, 1, 13, 13);
+            case EAST -> Block.box(15, 3, 3, interaction ? 21 : 16, 13, 13);
         };
     }
 }

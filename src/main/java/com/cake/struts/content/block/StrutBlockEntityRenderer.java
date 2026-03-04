@@ -1,6 +1,6 @@
 package com.cake.struts.content.block;
 
-import com.cake.struts.compat.flywheel.FlywheelCompatLoader;
+import com.cake.struts.compat.flywheel.StrutsFlywheelCompatLoader;
 import com.cake.struts.content.StrutModelBuilder;
 import com.cake.struts.mixin.StrutRenderSystemAccessor;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -32,12 +32,12 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
     }
 
     @Override
-    public void render(final StrutBlockEntity blockEntity, final float partialTick, final PoseStack poseStack, final MultiBufferSource buffer, final int packedLight, final int packedOverlay) {
+    public void render(final StrutBlockEntity blockEntity, final float partialTick, final @NotNull PoseStack poseStack, final @NotNull MultiBufferSource buffer, final int packedLight, final int packedOverlay) {
         if (!(blockEntity.getBlockState().getBlock() instanceof final StrutBlock strutBlock) || blockEntity.getLevel() == null) {
             return;
         }
 
-        if (FlywheelCompatLoader.supportsVisualization(blockEntity.getLevel())) {
+        if (StrutsFlywheelCompatLoader.supportsVisualization(blockEntity.getLevel())) {
             return;
         }
 
@@ -69,7 +69,7 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
     }
 
     @Override
-    public boolean shouldRender(final StrutBlockEntity blockEntity, final Vec3 cameraPos) {
+    public boolean shouldRender(final @NotNull StrutBlockEntity blockEntity, final @NotNull Vec3 cameraPos) {
         return true;
     }
 

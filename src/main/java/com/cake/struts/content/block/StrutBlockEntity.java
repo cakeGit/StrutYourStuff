@@ -1,15 +1,10 @@
 package com.cake.struts.content.block;
 
-import com.cake.struts.compat.flywheel.FlywheelCompatLoader;
+import com.cake.struts.compat.flywheel.StrutsFlywheelCompatLoader;
 import com.cake.struts.content.IAntiClippedShadowLighter;
 import com.cake.struts.content.StrutModelType;
 import com.cake.struts.content.connection.GirderConnectionNode;
 import com.cake.struts.content.structure.GirderStrutStructureShapes;
-import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.function.BiConsumer;
-import com.cake.struts.registry.StrutBlockEntities;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -20,15 +15,19 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowLighter {
 
@@ -48,11 +47,7 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     private final Set<BlockPos> unresolvedLegacyConnections = new HashSet<>();
     public List<BakedQuad> connectionQuadCache;
 
-    public StrutBlockEntity(final BlockPos pos, final BlockState state) {
-        this(StrutBlockEntities.GIRDER_STRUT.get(), pos, state);
-    }
-
-    public StrutBlockEntity(final BlockEntityType<?> type, final BlockPos pos, final BlockState state) {
+    public StrutBlockEntity(final BlockEntityType<? extends StrutBlockEntity> type, final BlockPos pos, final BlockState state) {
         super(type, pos, state);
     }
 
@@ -133,13 +128,13 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
         if (level != null) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
             if (level.isClientSide) {
-                FlywheelCompatLoader.queueUpdate(this);
+                StrutsFlywheelCompatLoader.queueUpdate(this);
             }
         }
     }
 
     @Override
-    protected void saveAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
+    protected void saveAdditional(final @NotNull CompoundTag tag, final HolderLookup.@NotNull Provider registries) {
         super.saveAdditional(tag, registries);
         final ListTag list = new ListTag();
         for (final GirderConnectionNode p : connections) {
@@ -161,7 +156,7 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     }
 
     @Override
-    protected void loadAdditional(final CompoundTag tag, final HolderLookup.Provider registries) {
+    protected void loadAdditional(final @NotNull CompoundTag tag, final HolderLookup.@NotNull Provider registries) {
         super.loadAdditional(tag, registries);
         connections.clear();
         unresolvedLegacyConnections.clear();
@@ -182,18 +177,18 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     }
 
     @Override
-    public CompoundTag getUpdateTag(final HolderLookup.Provider registries) {
+    public @NotNull CompoundTag getUpdateTag(final HolderLookup.@NotNull Provider registries) {
         final CompoundTag tag = super.getUpdateTag(registries);
         saveAdditional(tag, registries);
         return tag;
     }
 
     @Override
-    public void handleUpdateTag(final CompoundTag tag, final HolderLookup.Provider registries) {
+    public void handleUpdateTag(final @NotNull CompoundTag tag, final HolderLookup.@NotNull Provider registries) {
         loadAdditional(tag, registries);
         connectionQuadCache = null;
         if (level != null && level.isClientSide) {
-            FlywheelCompatLoader.queueUpdate(this);
+            StrutsFlywheelCompatLoader.queueUpdate(this);
             if (CLIENT_UPDATE_LISTENER != null) {
                 CLIENT_UPDATE_LISTENER.accept(level, this);
             }
@@ -206,7 +201,7 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     }
 
     @Override
-    public void onDataPacket(final Connection connection, final ClientboundBlockEntityDataPacket packet, final HolderLookup.Provider registries) {
+    public void onDataPacket(final @NotNull Connection connection, final ClientboundBlockEntityDataPacket packet, final HolderLookup.@NotNull Provider registries) {
         final CompoundTag tag = packet.getTag();
         if (tag != null) {
             handleUpdateTag(tag, registries);

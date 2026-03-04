@@ -1,0 +1,42 @@
+name: CI & Deployment
+
+on:
+  push:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Publish to Reposilite
+        env:
+          AZMOD_MAVEN_USER: ${{ secrets.REPOSILITE_USER }}
+          AZMOD_MAVEN_PASSWORD: ${{ secrets.REPOSILITE_TOKEN }}
+          AZMOD_MAVEN_TOKEN: ${{ secrets.REPOSILITE_TOKEN }}
+        run: ./gradlew publish -Psnapshot_versioning=true -PazmodRepository=snapshots
+
+      - name: Generate Javadoc
+        run: ./gradlew javadoc -Psnapshot_versioning=true -PazmodRepository=snapshots
+
+      - name: Deploy Javadocs
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/docs/javadoc
+          cname: jdoc.struts.azmod.net

@@ -1,7 +1,7 @@
 package com.cake.struts.content.structure;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -42,7 +42,7 @@ class PositionData {
         mergedShape = mergedShape.optimize();
     }
 
-    VoxelShape getOutlineShape(final net.minecraft.core.BlockPos pos, final CollisionContext context) {
+    VoxelShape getOutlineShape(final BlockPos pos, final CollisionContext context) {
         if (perConnectionShapes.isEmpty()) {
             return Shapes.empty();
         }
@@ -68,7 +68,7 @@ class PositionData {
         return bestShape.isEmpty() ? mergedShape : bestShape;
     }
 
-    @Nullable ConnectionKey getTargetedConnection(final net.minecraft.core.BlockPos pos, final Vec3 origin, final Vec3 direction) {
+    @Nullable ConnectionKey getTargetedConnection(final BlockPos pos, final Vec3 origin, final Vec3 direction) {
         if (perConnectionShapes.isEmpty()) {
             return null;
         }
@@ -88,7 +88,7 @@ class PositionData {
         return bestDistance == Double.POSITIVE_INFINITY ? null : bestKey;
     }
 
-    private static double intersectShape(final Vec3 origin, final Vec3 direction, final net.minecraft.core.BlockPos pos, final VoxelShape shape) {
+    private static double intersectShape(final Vec3 origin, final Vec3 direction, final BlockPos pos, final VoxelShape shape) {
         double bestDistance = Double.POSITIVE_INFINITY;
         for (final AABB localBox : shape.toAabbs()) {
             final AABB worldBox = localBox.move(pos);
@@ -111,7 +111,11 @@ class PositionData {
             final double invDir = 1.0 / dirX;
             double t1 = (aabb.minX - origin.x) * invDir;
             double t2 = (aabb.maxX - origin.x) * invDir;
-            if (t1 > t2) { final double tmp = t1; t1 = t2; t2 = tmp; }
+            if (t1 > t2) {
+                final double tmp = t1;
+                t1 = t2;
+                t2 = tmp;
+            }
             tMin = Math.max(tMin, t1);
             tMax = Math.min(tMax, t2);
             if (tMax < tMin) return Double.POSITIVE_INFINITY;
@@ -124,7 +128,11 @@ class PositionData {
             final double invDir = 1.0 / dirY;
             double t1 = (aabb.minY - origin.y) * invDir;
             double t2 = (aabb.maxY - origin.y) * invDir;
-            if (t1 > t2) { final double tmp = t1; t1 = t2; t2 = tmp; }
+            if (t1 > t2) {
+                final double tmp = t1;
+                t1 = t2;
+                t2 = tmp;
+            }
             tMin = Math.max(tMin, t1);
             tMax = Math.min(tMax, t2);
             if (tMax < tMin) return Double.POSITIVE_INFINITY;
@@ -137,7 +145,11 @@ class PositionData {
             final double invDir = 1.0 / dirZ;
             double t1 = (aabb.minZ - origin.z) * invDir;
             double t2 = (aabb.maxZ - origin.z) * invDir;
-            if (t1 > t2) { final double tmp = t1; t1 = t2; t2 = tmp; }
+            if (t1 > t2) {
+                final double tmp = t1;
+                t1 = t2;
+                t2 = tmp;
+            }
             tMin = Math.max(tMin, t1);
             tMax = Math.min(tMax, t2);
             if (tMax < tMin) return Double.POSITIVE_INFINITY;

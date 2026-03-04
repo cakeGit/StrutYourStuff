@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -171,7 +172,7 @@ public final class CapAccumulator {
         // Check winding order and reverse if needed
         final Vector3f polygonNormal = StrutGeometry.computePolygonNormal(cleaned);
         if (polygonNormal.lengthSquared() > StrutGeometry.EPSILON && polygonNormal.dot(faceNormal) < 0f) {
-            java.util.Collections.reverse(cleaned);
+            Collections.reverse(cleaned);
         }
 
         StrutGeometry.emitPolygonToConsumer(cleaned, bufferConsumer, lightFunction);
@@ -364,7 +365,7 @@ public final class CapAccumulator {
      * the same edge of the clipping plane, even if they come from different quads.
      * This is necessary because each quad generates its own clipped vertices independently.
      */
-    private static boolean positionsClose(final org.joml.Vector3f a, final org.joml.Vector3f b) {
+    private static boolean positionsClose(final Vector3f a, final Vector3f b) {
         final float dx = a.x - b.x;
         final float dy = a.y - b.y;
         final float dz = a.z - b.z;
@@ -422,7 +423,7 @@ public final class CapAccumulator {
         // Check winding order and reverse if needed
         final Vector3f polygonNormal = StrutGeometry.computePolygonNormal(cleaned);
         if (polygonNormal.lengthSquared() > StrutGeometry.EPSILON && polygonNormal.dot(faceNormal) < 0f) {
-            java.util.Collections.reverse(cleaned);
+            Collections.reverse(cleaned);
         }
 
         final Direction face = Direction.getNearest(faceNormal.x, faceNormal.y, faceNormal.z);

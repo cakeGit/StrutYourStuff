@@ -10,6 +10,7 @@ import net.neoforged.neoforge.client.ChunkRenderTypeSet;
 import net.neoforged.neoforge.client.model.BakedModelWrapper;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.common.util.TriState;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -31,16 +32,16 @@ public final class StrutBakedModel extends BakedModelWrapper<BakedModel> {
     }
 
     @Override
-    public List<BakedQuad> getQuads(final @Nullable BlockState state, final @Nullable Direction side, final RandomSource rand) {
+    public @NotNull List<BakedQuad> getQuads(final @Nullable BlockState state, final @Nullable Direction side, final @NotNull RandomSource rand) {
         return side == null ? shadedQuads : EMPTY;
     }
 
     @Override
-    public List<BakedQuad> getQuads(final @Nullable BlockState state,
-                                    final @Nullable Direction side,
-                                    final RandomSource rand,
-                                    final ModelData extraData,
-                                    final @Nullable RenderType renderType) {
+    public @NotNull List<BakedQuad> getQuads(final @Nullable BlockState state,
+                                             final @Nullable Direction side,
+                                             final @NotNull RandomSource rand,
+                                             final @NotNull ModelData extraData,
+                                             final @Nullable RenderType renderType) {
         if (side != null) {
             return EMPTY;
         }
@@ -51,7 +52,7 @@ public final class StrutBakedModel extends BakedModelWrapper<BakedModel> {
     }
 
     @Override
-    public ChunkRenderTypeSet getRenderTypes(final BlockState state, final RandomSource rand, final ModelData data) {
+    public @NotNull ChunkRenderTypeSet getRenderTypes(final @NotNull BlockState state, final @NotNull RandomSource rand, final @NotNull ModelData data) {
         return RENDER_TYPES;
     }
 
@@ -61,7 +62,7 @@ public final class StrutBakedModel extends BakedModelWrapper<BakedModel> {
     }
 
     @Override
-    public TriState useAmbientOcclusion(final BlockState state, final ModelData data, final RenderType renderType) {
+    public @NotNull TriState useAmbientOcclusion(final @NotNull BlockState state, final @NotNull ModelData data, final @NotNull RenderType renderType) {
         return TriState.FALSE;
     }
 

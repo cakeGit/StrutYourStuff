@@ -7,8 +7,8 @@ import com.cake.struts.content.block.StrutBlockEntity;
 import com.cake.struts.content.connection.GirderConnectionNode;
 import com.cake.struts.content.structure.BlockyStrutLineGeometry;
 import com.cake.struts.content.structure.ConnectionKey;
-import com.cake.struts.network.BreakStrutPacket;
 import com.cake.struts.internal.util.LevelSafeStorage;
+import com.cake.struts.network.BreakStrutPacket;
 import com.cake.struts.registry.StrutItemTags;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -35,6 +35,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RenderHighlightEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
@@ -92,13 +93,15 @@ public class StrutInteractionHandler {
                 );
                 final ConnectionKey key = new ConnectionKey(pos, other);
                 store.put(key, cableRenderInfo != null
-                        ? StrutConnectionShape.cable(
+                        ? new CableStrutConnectionShape(
                         geom.getFromAttachment(), geom.getToAttachment(),
                         geom.getHalfX(), geom.getHalfY(), cableRenderInfo
                 )
-                        : new StrutConnectionShape(
+                        : new DefaultStrutConnectionShape(
                         geom.getFromAttachment(), geom.getToAttachment(),
-                        geom.getHalfX(), geom.getHalfY()
+                        geom.getHalfX(), geom.getHalfY(),
+                        geom.getFromPos(), geom.getFromFacing(),
+                        geom.getToPos(), geom.getToFacing()
                 ));
             }
         }
@@ -116,7 +119,7 @@ public class StrutInteractionHandler {
     }
 
     @SubscribeEvent
-    public static void onClickInput(final net.neoforged.neoforge.client.event.InputEvent.InteractionKeyMappingTriggered event) {
+    public static void onClickInput(final InputEvent.InteractionKeyMappingTriggered event) {
         final Minecraft mc = Minecraft.getInstance();
         if (mc.screen != null || mc.player == null) return;
 
@@ -230,7 +233,7 @@ public class StrutInteractionHandler {
             clearSelection();
         }
     }
-    
+
     private static void clearSelection() {
         final Minecraft mc = Minecraft.getInstance();
         resetBreakProgress(mc.level, mc.player);
@@ -330,7 +333,7 @@ public class StrutInteractionHandler {
         if (!(state.getBlock() instanceof StrutBlock)) {
             return;
         }
-        final VoxelShape attachmentShape = StrutBlock.getAttachmentBaseShape(state.getValue(StrutBlock.FACING));
+        final VoxelShape attachmentShape = StrutBlock.getAttachmentBaseShape(state.getValue(StrutBlock.FACING), true);
         attachmentShape.forAllEdges((minX, minY, minZ, maxX, maxY, maxZ) -> drawAttachmentEdge(
                 ms, vb, camera,
                 minX + pos.getX(), minY + pos.getY(), minZ + pos.getZ(),

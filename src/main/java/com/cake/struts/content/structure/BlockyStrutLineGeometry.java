@@ -8,6 +8,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.slf4j.LoggerFactory;
 
 /**
  * Used for getting multiple collision shapes based on two GirderStrutBlockEntities.
@@ -34,6 +35,11 @@ public class BlockyStrutLineGeometry {
     private final Vec3 fromAttachment;
     private final Vec3 toAttachment;
 
+    private final BlockPos fromPos;
+    private final Direction fromFacing;
+    private final BlockPos toPos;
+    private final Direction toFacing;
+
     //Effectively final
     private Vec3 localXDirection;
     private Vec3 localYDirection;
@@ -44,6 +50,12 @@ public class BlockyStrutLineGeometry {
         this.shapeSizeXPixels = shapeSizeXPixels;
         this.shapeSizeYPixels = shapeSizeYPixels;
         this.voxelShapeResolutionPixels = Math.max(1, voxelShapeResolutionPixels);
+
+        this.fromPos = from;
+        this.fromFacing = fromFacing;
+        this.toPos = to;
+        this.toFacing = toFacing;
+
         this.halfX = (shapeSizeXPixels / 16.0) / 2.0;
         this.halfY = (shapeSizeYPixels / 16.0) / 2.0;
         this.fromAttachment = Vec3.atCenterOf(from).relative(fromFacing, -SURFACE_OFFSET);
@@ -61,6 +73,22 @@ public class BlockyStrutLineGeometry {
 
     public Vec3 getToAttachment() {
         return toAttachment;
+    }
+
+    public BlockPos getFromPos() {
+        return fromPos;
+    }
+
+    public Direction getFromFacing() {
+        return fromFacing;
+    }
+
+    public BlockPos getToPos() {
+        return toPos;
+    }
+
+    public Direction getToFacing() {
+        return toFacing;
     }
 
     public double getHalfX() {
@@ -230,12 +258,12 @@ public class BlockyStrutLineGeometry {
         final Vec3 helper = (Math.abs(difference.y()) > 0.999) ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
         this.localXDirection = difference.cross(helper).normalize();
         if (isEpsilon(localXDirection)) {
-            org.slf4j.LoggerFactory.getLogger("struts").error("Unexpected zero local X direction for strut line geometry between {} and {}, skipping shape generation", fromAttachment, toAttachment);
+            LoggerFactory.getLogger("struts").error("Unexpected zero local X direction for strut line geometry between {} and {}, skipping shape generation", fromAttachment, toAttachment);
             return new BlockPos[0];
         }
         this.localYDirection = difference.cross(localXDirection).normalize();
         if (isEpsilon(localYDirection)) {
-            org.slf4j.LoggerFactory.getLogger("struts").error("Unexpected zero local Y direction for strut line geometry between {} and {}, skipping shape generation", fromAttachment, toAttachment);
+            LoggerFactory.getLogger("struts").error("Unexpected zero local Y direction for strut line geometry between {} and {}, skipping shape generation", fromAttachment, toAttachment);
             return new BlockPos[0];
         }
 

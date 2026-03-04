@@ -2,18 +2,21 @@ package com.cake.struts.content;
 
 import com.cake.struts.content.block.StrutBlock;
 import com.cake.struts.content.block.StrutBlockItem;
+import com.cake.struts.content.shape.CableStrutConnectionShape;
+import com.cake.struts.content.shape.DefaultStrutConnectionShape;
 import com.cake.struts.content.shape.StrutConnectionShape;
 import com.cake.struts.content.structure.BlockyStrutLineGeometry;
 import com.cake.struts.internal.microliner.Microliner;
 import com.cake.struts.internal.microliner.MicrolinerParams;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.cake.struts.registry.StrutDataComponents;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -87,11 +90,10 @@ public class StrutPlacementEffects {
         showAnchorOutline(fromPos, fromFace, "from", outlinerColor.x, outlinerColor.y, outlinerColor.z);
         showAnchorOutline(targetPos, targetFace, "to", outlinerColor.x, outlinerColor.y, outlinerColor.z);
         showConnectionShape(previewShape, outlinerColor.x, outlinerColor.y, outlinerColor.z);
-
     }
 
     private static void showAnchorOutline(final BlockPos targetPos, final Direction targetFace, final String id, final float r, final float g, final float b) {
-        final AABB localBounds = StrutBlock.getAttachmentBaseShape(targetFace).bounds();
+        final AABB localBounds = StrutBlock.getAttachmentBaseShape(targetFace, true).bounds();
         final AABB worldBounds = localBounds.move(targetPos.getX(), targetPos.getY(), targetPos.getZ());
         Microliner.get().showAABB("strut_preview_anchor_" + id, worldBounds, new MicrolinerParams(1 / 16f, r, g, b, 1f, 2));
     }
@@ -108,7 +110,7 @@ public class StrutPlacementEffects {
         if (heldItem.getItem() instanceof final BlockItem blockItem && blockItem.getBlock() instanceof final StrutBlock strutBlock) {
             final CableStrutInfo cableRenderInfo = strutBlock.getCableRenderInfo();
             if (cableRenderInfo != null) {
-                return StrutConnectionShape.cable(
+                return new CableStrutConnectionShape(
                         lineGeometry.getFromAttachment(),
                         lineGeometry.getToAttachment(),
                         lineGeometry.getHalfX(),
@@ -117,11 +119,15 @@ public class StrutPlacementEffects {
                 );
             }
         }
-        return new StrutConnectionShape(
+        return new DefaultStrutConnectionShape(
                 lineGeometry.getFromAttachment(),
                 lineGeometry.getToAttachment(),
                 lineGeometry.getHalfX(),
-                lineGeometry.getHalfY()
+                lineGeometry.getHalfY(),
+                lineGeometry.getFromPos(),
+                lineGeometry.getFromFacing(),
+                lineGeometry.getToPos(),
+                lineGeometry.getToFacing()
         );
     }
 
@@ -138,8 +144,8 @@ public class StrutPlacementEffects {
             return strutBlock.getModelType();
         }
         return new StrutModelType(
-                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("struts", "block/girder_strut/girder_strut_segment"),
-                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("struts", "block/industrial_iron_block")
+                ResourceLocation.fromNamespaceAndPath("struts", "block/girder_strut/girder_strut_segment"),
+                ResourceLocation.fromNamespaceAndPath("struts", "block/industrial_iron_block")
         );
     }
 

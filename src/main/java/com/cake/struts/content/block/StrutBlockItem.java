@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
@@ -339,7 +340,7 @@ public class StrutBlockItem extends BlockItem {
         level.playSound(player, pos, soundType.getPlaceSound(), SoundSource.BLOCKS,
                 (soundType.getVolume() + 1.0F) / 2.0F,
                 soundType.getPitch() * 0.8F);
-        level.gameEvent(player, net.minecraft.world.level.gameevent.GameEvent.BLOCK_PLACE, pos);
+        level.gameEvent(player, GameEvent.BLOCK_PLACE, pos);
         return true;
     }
 

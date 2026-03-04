@@ -2,6 +2,7 @@ package com.cake.struts.content.shape;
 
 import com.cake.struts.content.block.StrutBlock;
 import com.cake.struts.content.structure.ConnectionKey;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
 import java.util.Map;
@@ -26,7 +27,7 @@ class LevelStrutOutlineStore {
         shapes.remove(key);
     }
 
-    void removeAllFor(final net.minecraft.core.BlockPos pos) {
+    void removeAllFor(final BlockPos pos) {
         shapes.keySet().removeIf(key -> key.a().equals(pos) || key.b().equals(pos));
     }
 

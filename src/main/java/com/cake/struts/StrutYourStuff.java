@@ -1,6 +1,5 @@
 package com.cake.struts;
 
-import com.cake.struts.registry.StrutBlockEntities;
 import com.cake.struts.registry.StrutBlocks;
 import com.cake.struts.registry.StrutDataComponents;
 import net.neoforged.api.distmarker.Dist;
@@ -17,7 +16,6 @@ public class StrutYourStuff {
 
     public StrutYourStuff(final IEventBus modBus) {
         StrutBlocks.BLOCKS.register(modBus);
-        StrutBlockEntities.register(modBus);
         StrutDataComponents.DATA_COMPONENTS.register(modBus);
         if (FMLLoader.getDist() == Dist.CLIENT) {
             new StrutYourStuffClient(modBus);

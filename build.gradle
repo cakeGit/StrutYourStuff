@@ -5,8 +5,11 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.140'
 }
 
+def isSnapshotVersioning = project.hasProperty('snapshot_versioning') && project.property('snapshot_versioning').toString().toBoolean()
+def resolvedVersion = isSnapshotVersioning ? "${mod_version}-SNAPSHOT" : mod_version
+
 group = mod_group_id
-version = mod_version
+version = resolvedVersion
 
 base {
     archivesName = mod_id
@@ -19,7 +22,7 @@ repositories {
     maven { url = 'https://maven.createmod.net' }
     maven {
         name = 'azmod-maven'
-        url = uri('https://maven.azmod.net/releases')
+        url = uri("https://maven.azmod.net/${findProperty('azmodRepository') ?: 'releases'}")
     }
 }
 
@@ -43,7 +46,7 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.withType(ProcessResources).configureEach {
     def replaceProperties = [
-            mod_version: mod_version
+            mod_version: project.version
     ]
     inputs.properties replaceProperties
     filesMatching(['META-INF/neoforge.mods.toml']) {
@@ -69,14 +72,14 @@ publishing {
             artifact tasks.named('sourcesJar')
             groupId = mod_group_id
             artifactId = mod_id
-            version = mod_version
+            version = project.version
         }
     }
 
     repositories {
         maven {
-            name = 'azmod-releases'
-            url = uri('https://maven.azmod.net/releases')
+            name = 'azmod-maven'
+            url = uri("https://maven.azmod.net/${findProperty('azmodRepository') ?: 'releases'}")
             credentials {
                 username = findProperty('azmodMavenUser') ?: System.getenv('AZMOD_MAVEN_USER')
                 password = findProperty('azmodMavenToken') ?: System.getenv('AZMOD_MAVEN_TOKEN')

@@ -3,6 +3,7 @@ package com.cake.struts.content.structure;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
@@ -23,7 +24,7 @@ public interface GirderStrutShapedBlock {
      * Get the strut connection shape at this position from the shape registry.
      * Returns empty if the level is not a full Level (e.g. during chunk gen).
      */
-    default VoxelShape getStrutShape(final @NotNull net.minecraft.world.level.BlockGetter level, final @NotNull BlockPos pos) {
+    default VoxelShape getStrutShape(final @NotNull BlockGetter level, final @NotNull BlockPos pos) {
         if (level instanceof final Level worldLevel) {
             return GirderStrutStructureShapes.getShape(worldLevel, pos);
         }
@@ -33,7 +34,7 @@ public interface GirderStrutShapedBlock {
     /**
      * Get the per-strut outline/interaction shape at this position.
      */
-    default VoxelShape getStrutOutlineShape(final @NotNull net.minecraft.world.level.BlockGetter level, final @NotNull BlockPos pos,
+    default VoxelShape getStrutOutlineShape(final @NotNull BlockGetter level, final @NotNull BlockPos pos,
                                             final @NotNull CollisionContext context) {
         if (level instanceof final Level worldLevel) {
             return GirderStrutStructureShapes.getOutlineShape(worldLevel, pos, context);
@@ -42,7 +43,7 @@ public interface GirderStrutShapedBlock {
     }
 
     /**
-     * Call from {@link Block#updateShape} to schedule a reconstruction tick when a neighbor becomes air.
+     * Call from {@link Block#updateShape}. Schedules restoration of structure blocks if a neighboring block was removed can now be replaced.
      */
     default void scheduleStructureRebuildIfNeeded(final @NotNull BlockState state, final @NotNull Direction direction,
                                                   final @NotNull BlockState neighborState, final @NotNull LevelAccessor level,

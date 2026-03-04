@@ -1,11 +1,12 @@
 package com.cake.struts.network;
 
+import com.cake.struts.StrutYourStuff;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
-@EventBusSubscriber(modid = com.cake.struts.StrutYourStuff.MOD_ID)
+@EventBusSubscriber(modid = StrutYourStuff.MOD_ID)
 public class StrutPackets {
 
     @SubscribeEvent

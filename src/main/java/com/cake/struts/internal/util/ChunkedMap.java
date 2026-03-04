@@ -1,8 +1,8 @@
 package com.cake.struts.internal.util;
 
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.level.ChunkEvent;
@@ -44,12 +44,12 @@ public class ChunkedMap<T extends ChunkedMap.IChunkedObject> {
     }
 
     public List<T> evictChunk(final ChunkPos chunk) {
-        List<T> removed = map.remove(chunk);
+        final List<T> removed = map.remove(chunk);
         if (removed == null || removed.isEmpty()) {
             return List.of();
         }
 
-        List<T> immutableRemoved = List.copyOf(removed);
+        final List<T> immutableRemoved = List.copyOf(removed);
         onChunkEvicted(chunk, immutableRemoved);
         return immutableRemoved;
     }
@@ -85,14 +85,14 @@ public class ChunkedMap<T extends ChunkedMap.IChunkedObject> {
         LEVEL_BOUND_MAPS.remove(this);
     }
 
-    @EventBusSubscriber
+    @EventBusSubscriber(modid = "struts")
     public static class ChunkedMapEvents {
         @SubscribeEvent
         public static void onChunkUnload(final ChunkEvent.Unload event) {
-            if (!event.getLevel().isClientSide() && event.getLevel() instanceof final Level level) {
-                ResourceKey<Level> key = level.dimension();
-                ChunkPos unloadedChunk = event.getChunk().getPos();
-                for (ChunkedMap<?> chunkedMap : LEVEL_BOUND_MAPS) {
+            if (event.getLevel() instanceof final Level level) {
+                final ResourceKey<Level> key = level.dimension();
+                final ChunkPos unloadedChunk = event.getChunk().getPos();
+                for (final ChunkedMap<?> chunkedMap : LEVEL_BOUND_MAPS) {
                     if (chunkedMap.isBoundToLevel(key)) {
                         chunkedMap.evictChunk(unloadedChunk);
                     }
@@ -102,9 +102,9 @@ public class ChunkedMap<T extends ChunkedMap.IChunkedObject> {
 
         @SubscribeEvent
         public static void onLevelUnload(final LevelEvent.Unload event) {
-            if (!event.getLevel().isClientSide() && event.getLevel() instanceof final Level level) {
-                ResourceKey<Level> key = level.dimension();
-                for (ChunkedMap<?> chunkedMap : List.copyOf(LEVEL_BOUND_MAPS)) {
+            if (event.getLevel() instanceof final Level level) {
+                final ResourceKey<Level> key = level.dimension();
+                for (final ChunkedMap<?> chunkedMap : List.copyOf(LEVEL_BOUND_MAPS)) {
                     if (chunkedMap.isBoundToLevel(key)) {
                         chunkedMap.clearAndUnbind();
                     }

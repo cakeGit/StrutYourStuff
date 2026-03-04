@@ -8,6 +8,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -259,7 +260,7 @@ public final class StrutMeshQuad {
         return transformed;
     }
 
-    private static Vector3f toVector3f(final net.minecraft.world.phys.Vec3 vec) {
+    private static Vector3f toVector3f(final Vec3 vec) {
         return new Vector3f((float) vec.x, (float) vec.y, (float) vec.z);
     }
 }

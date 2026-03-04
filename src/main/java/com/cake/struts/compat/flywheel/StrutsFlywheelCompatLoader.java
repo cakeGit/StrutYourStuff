@@ -1,12 +1,14 @@
 package com.cake.struts.compat.flywheel;
 
+import com.cake.struts.content.block.StrutBlockEntity;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class FlywheelCompatLoader {
+public final class StrutsFlywheelCompatLoader {
 
     private static final String FLYWHEEL_ID = "flywheel";
     private static @Nullable Boolean flywheelLoaded;
@@ -22,7 +24,17 @@ public final class FlywheelCompatLoader {
             return;
         }
         compat = new FlywheelCompat();
-        compat.register();
+    }
+
+    public static void registerStrutVisual(final BlockEntityType<? extends StrutBlockEntity> blockEntityType) {
+        if (!isFlywheelLoaded()) {
+            return;
+        }
+        if (compat == null) {
+            compat = new FlywheelCompat();
+        }
+        initialized = true;
+        compat.register(blockEntityType);
     }
 
     public static boolean supportsVisualization(final @Nullable LevelAccessor level) {
