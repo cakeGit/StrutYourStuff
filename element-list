@@ -1,0 +1,16 @@
+com.cake.struts
+com.cake.struts.compat.flywheel
+com.cake.struts.content
+com.cake.struts.content.block
+com.cake.struts.content.cap
+com.cake.struts.content.connection
+com.cake.struts.content.geometry
+com.cake.struts.content.mesh
+com.cake.struts.content.shape
+com.cake.struts.content.structure
+com.cake.struts.internal.microliner
+com.cake.struts.internal.util
+com.cake.struts.mixin
+com.cake.struts.mixin.compat.create
+com.cake.struts.network
+com.cake.struts.registry
