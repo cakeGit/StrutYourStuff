@@ -3,6 +3,7 @@ plugins {
     id 'maven-publish'
     id 'idea'
     id 'net.neoforged.moddev' version '2.0.140'
+    id 'me.modmuss50.mod-publish-plugin' version '1.1.0'
 }
 
 def isSnapshotVersioning = project.hasProperty('snapshot_versioning') && project.property('snapshot_versioning').toString().toBoolean()
@@ -92,5 +93,85 @@ idea {
     module {
         downloadSources = true
         downloadJavadoc = true
+    }
+}
+
+// ========================
+// Changelog & Publishing
+// ========================
+
+String getRelevantChangelog(String targetVersion) {
+    def changelogFile = file("CHANGELOG.md")
+    if (!changelogFile.exists()) {
+        return "No changelog found."
+    }
+    def lines = changelogFile.readLines()
+    def result = new StringBuilder()
+    def capturing = false
+    def targetMinecraftVersion = targetVersion.split("-")[0]
+    def targetModVersion = targetVersion.split("-").length > 1 ? targetVersion.split("-")[1] : ""
+    def newerVersionsExist = false
+
+    for (line in lines) {
+        if (line.startsWith("# ")) {
+            if (capturing) {
+                break
+            }
+            def versionTag = line.substring(2).trim()
+            def entryMinecraftVersion = versionTag.split("-")[0]
+            def entryModVersion = versionTag.split("-").length > 1 ? versionTag.split("-")[1] : ""
+            if (versionTag == targetVersion) {
+                capturing = true
+                continue
+            }
+            if (entryMinecraftVersion == targetMinecraftVersion && entryModVersion > targetModVersion) {
+                newerVersionsExist = true
+            }
+        } else if (capturing && line.trim()) {
+            result.append(line).append("\n")
+        }
+    }
+
+    if (newerVersionsExist) {
+        println("WARNING: Publishing an older version! Newer entries exist for Minecraft ${targetMinecraftVersion}.")
+    }
+
+    return result.length() > 0 ? result.toString().trim() : "No changelog entry found for version ${targetVersion}."
+}
+
+publishMods {
+    file = jar.archiveFile
+    def changelogText = getRelevantChangelog(minecraft_version + "-" + mod_version)
+    changelog = changelogText
+    println("Using changelog:\n" + changelogText + "\n")
+    type = STABLE
+    modLoaders.add("neoforge")
+    displayName = "Strut Your Stuff" + " " + mod_version + " NeoForge " + minecraft_version
+
+    curseforge {
+        projectId = "1486746"
+        projectSlug = "strut-your-stuff"
+        accessToken = findProperty('curseforgePublishToken')
+        minecraftVersions.add("1.21.1")
+        optional("flywheel")
+    }
+    modrinth {
+        projectId = "sHO3MhQx"
+        accessToken = findProperty('modrinthPublishToken')
+        minecraftVersions.add("1.21.1")
+        optional("flywheel")
+    }
+
+    discord {
+        webhookUrl = findProperty('aztechDiscordPublishWebhook')
+        username = "struts version bot"
+        avatarUrl = "https://cataas.com/cat?width=500&height=500"
+        content = """
+        # New Mod Release: ${getDisplayName().get()}
+        ${changelogText}
+        """.trim()
+        style {
+            look = "CLASSIC"
+        }
     }
 }
