@@ -4,10 +4,10 @@ Strut Your Stuff is a library designed to create struts, blocks that span betwee
 
 ## Links
 
-* [Download on CurseForge](#)
-* [Download on Modrinth](#)
-* [Documentation](#)
-* [JavaDocs](#)
+* [Download on CurseForge](https://www.curseforge.com/minecraft/mc-mods/strut-your-stuff)
+* [Download on Modrinth](https://modrinth.com/mod/strut-your-stuff)
+* [Documentation](https://struts.azmod.net)
+* [JavaDocs](https://struts-jdoc.azmod.net)
 
 ## Features
 
@@ -32,7 +32,7 @@ Depending on your project's scope, you can include Strut Your Stuff as either an
 
 ### External Dependency (Preferred)
 
-Versions can be found on [CurseForge](#) and [Modrinth](#).
+Versions can be found on [CurseForge](https://www.curseforge.com/minecraft/mc-mods/strut-your-stuff/files/all?page=1&pageSize=20&showAlphaFiles=hide) and [Modrinth](https://modrinth.com/mod/strut-your-stuff/versions).
 
 It is recommended to use Strut Your Stuff as a standard external dependency. This approach ensures you automatically get fixes and improvements, reduces overhead, and helps give credit to the library.
 
