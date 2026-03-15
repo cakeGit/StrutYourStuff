@@ -333,7 +333,7 @@ public class StrutInteractionHandler {
         if (!(state.getBlock() instanceof StrutBlock)) {
             return;
         }
-        final VoxelShape attachmentShape = StrutBlock.getAttachmentBaseShape(state.getValue(StrutBlock.FACING), true);
+        final VoxelShape attachmentShape = state.getShape(level, pos);
         attachmentShape.forAllEdges((minX, minY, minZ, maxX, maxY, maxZ) -> drawAttachmentEdge(
                 ms, vb, camera,
                 minX + pos.getX(), minY + pos.getY(), minZ + pos.getZ(),

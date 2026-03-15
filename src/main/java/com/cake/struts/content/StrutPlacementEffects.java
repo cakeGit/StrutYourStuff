@@ -82,18 +82,26 @@ public class StrutPlacementEffects {
 
         // 95CD41 valid and EA5C2B invalid
         final Vector3f outlinerColor = valid ? new Vector3f(.35f, .85f, .55f) : new Vector3f(.85f, .35f, .55f);
+        if (!(heldItem.getItem() instanceof final BlockItem blockItem) || !(blockItem.getBlock() instanceof final StrutBlock heldBlock)) {
+            return;
+        }
         final StrutModelType modelType = resolveModelType(heldItem);
         final BlockyStrutLineGeometry lineGeometry = new BlockyStrutLineGeometry(fromPos, fromFace, targetPos, targetFace, modelType.shapeSizeXPixels(),
                 modelType.shapeSizeYPixels(), modelType.voxelShapeResolutionPixels());
         final StrutConnectionShape previewShape = resolvePreviewShape(heldItem, lineGeometry);
 
-        showAnchorOutline(fromPos, fromFace, "from", outlinerColor.x, outlinerColor.y, outlinerColor.z);
-        showAnchorOutline(targetPos, targetFace, "to", outlinerColor.x, outlinerColor.y, outlinerColor.z);
+        showAnchorOutline(level, fromPos, fromFace, heldBlock, "from", outlinerColor.x, outlinerColor.y, outlinerColor.z);
+        showAnchorOutline(level, targetPos, targetFace, heldBlock, "to", outlinerColor.x, outlinerColor.y, outlinerColor.z);
         showConnectionShape(previewShape, outlinerColor.x, outlinerColor.y, outlinerColor.z);
     }
 
-    private static void showAnchorOutline(final BlockPos targetPos, final Direction targetFace, final String id, final float r, final float g, final float b) {
-        final AABB localBounds = StrutBlock.getAttachmentBaseShape(targetFace, true).bounds();
+    private static void showAnchorOutline(final ClientLevel level, final BlockPos targetPos, final Direction targetFace,
+                                           final StrutBlock heldBlock, final String id, final float r, final float g, final float b) {
+        final BlockState state = level.getBlockState(targetPos);
+        final AABB localBounds = (state.getBlock() instanceof StrutBlock
+                ? state.getShape(level, targetPos)
+                : heldBlock.defaultBlockState().setValue(StrutBlock.FACING, targetFace).getShape(level, targetPos)
+        ).bounds();
         final AABB worldBounds = localBounds.move(targetPos.getX(), targetPos.getY(), targetPos.getZ());
         Microliner.get().showAABB("strut_preview_anchor_" + id, worldBounds, new MicrolinerParams(1 / 16f, r, g, b, 1f, 2));
     }
