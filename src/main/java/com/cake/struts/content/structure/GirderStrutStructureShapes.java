@@ -60,6 +60,22 @@ public class GirderStrutStructureShapes {
         return STORAGE.getForLevel(level).hasPositionData(pos);
     }
 
+    public static Set<BlockPos> getStructurePositionsForConnectionsAt(final Level level, final BlockPos pos) {
+        return STORAGE.getForLevel(level).getStructurePositionsForConnectionsAt(pos);
+    }
+
+    public static void restoreMissingStructureBlocksAt(final Level level, final BlockPos pos) {
+        STORAGE.getForLevel(level).restoreMissingStructureBlocksAt(level, pos);
+    }
+
+    public static void queueRestoreFromBreak(final Level level, final BlockPos pos) {
+        STORAGE.getForLevel(level).queueRestoreFromBreak(pos);
+    }
+
+    public static void flushQueuedRestores(final Level level) {
+        STORAGE.getForLevel(level).flushQueuedRestores(level);
+    }
+
     public static boolean placeStructureBlockIfPossible(final Level level, final BlockPos pos) {
         final BlockState currentState = level.getBlockState(pos);
         if (currentState.getBlock() == StrutBlocks.GIRDER_STRUT_STRUCTURE.get()) {
@@ -83,6 +99,7 @@ public class GirderStrutStructureShapes {
         private final ChunkedMap<GirderStrutConnectionShape> connectionsByChunk;
         private final Map<ConnectionKey, GirderStrutConnectionShape> connectionsByKey = new HashMap<>();
         private final Map<BlockPos, PositionData> shapesByPosition = new HashMap<>();
+        private final Set<BlockPos> queuedRestores = new LinkedHashSet<>();
 
         private ShapeRegistry(final Level level) {
             this.connectionsByChunk = new ChunkedMap<>(level) {
@@ -181,6 +198,52 @@ public class GirderStrutStructureShapes {
 
         boolean hasPositionData(final BlockPos pos) {
             return shapesByPosition.containsKey(pos);
+        }
+
+        Set<BlockPos> getStructurePositionsForConnectionsAt(final BlockPos pos) {
+            final PositionData positionData = shapesByPosition.get(pos);
+            if (positionData == null) {
+                return Set.of();
+            }
+
+            final Set<BlockPos> structurePositions = new LinkedHashSet<>();
+            for (final ConnectionKey key : positionData.perConnectionShapes.keySet()) {
+                final GirderStrutConnectionShape connectionShape = connectionsByKey.get(key);
+                if (connectionShape == null) {
+                    continue;
+                }
+
+                for (final BlockPos connectionPos : connectionShape.geometry().getPositions()) {
+                    if (!connectionPos.equals(key.a())
+                            && !connectionPos.equals(key.b())
+                            && shapesByPosition.containsKey(connectionPos)) {
+                        structurePositions.add(connectionPos);
+                    }
+                }
+            }
+            return Set.copyOf(structurePositions);
+        }
+
+        void restoreMissingStructureBlocksAt(final Level level, final BlockPos pos) {
+            for (final BlockPos structurePos : getStructurePositionsForConnectionsAt(pos)) {
+                placeStructureBlockIfPossible(level, structurePos);
+            }
+        }
+
+        void queueRestoreFromBreak(final BlockPos pos) {
+            queuedRestores.add(new BlockPos(pos));
+        }
+
+        void flushQueuedRestores(final Level level) {
+            if (queuedRestores.isEmpty()) {
+                return;
+            }
+
+            final Set<BlockPos> positionsToRestore = Set.copyOf(queuedRestores);
+            queuedRestores.clear();
+            for (final BlockPos pos : positionsToRestore) {
+                restoreMissingStructureBlocksAt(level, pos);
+            }
         }
     }
 }

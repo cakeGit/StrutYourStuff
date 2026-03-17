@@ -4,8 +4,6 @@ import com.cake.struts.content.block.StrutBlock;
 import com.cake.struts.content.block.StrutBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -78,13 +76,7 @@ public class GirderStrutStructureBlock extends Block implements GirderStrutShape
         if (state.getValue(WATERLOGGED)) {
             level.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
         }
-        scheduleStructureRebuildIfNeeded(state, direction, neighborState, level, pos, this);
         return state;
-    }
-
-    @Override
-    protected void tick(final @NotNull BlockState state, final @NotNull ServerLevel level, final @NotNull BlockPos pos, final @NotNull RandomSource random) {
-        rebuildMissingStructureNeighbors(level, pos);
     }
 
     @Override

@@ -6,8 +6,6 @@ import com.cake.struts.content.connection.GirderConnectionNode;
 import com.cake.struts.content.structure.GirderStrutShapedBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
@@ -68,13 +66,7 @@ public abstract class StrutBlock extends Block implements SimpleWaterloggedBlock
                                            final @NotNull BlockPos pos, final @NotNull BlockPos neighbourPos) {
         if (state.getValue(WATERLOGGED))
             world.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
-        scheduleStructureRebuildIfNeeded(state, direction, neighbourState, world, pos, this);
         return state;
-    }
-
-    @Override
-    protected void tick(final @NotNull BlockState state, final @NotNull ServerLevel level, final @NotNull BlockPos pos, final @NotNull RandomSource random) {
-        rebuildMissingStructureNeighbors(level, pos);
     }
 
     @Override
