@@ -5,3 +5,4 @@ Fix structure:
 
 Fix placement and destroy by shape sound
 Fix destroy time and tool maybe if possible.
+Fix double destroy sometimes
