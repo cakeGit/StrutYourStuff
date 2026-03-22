@@ -2,9 +2,9 @@ package com.cake.struts.internal.util;
 
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.level.LevelEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.event.level.LevelEvent;
 
 import java.util.List;
 import java.util.Map;
@@ -48,7 +48,7 @@ public class LevelSafeStorage<T> {
         storageByLevel.remove(level.dimension());
     }
 
-    @EventBusSubscriber(modid = "struts")
+    @Mod.EventBusSubscriber(modid = "struts")
     public static class StorageInvalidationEvents {
         @SubscribeEvent
         public static void onLevelUnload(final LevelEvent.Unload event) {

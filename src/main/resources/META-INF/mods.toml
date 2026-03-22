@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[1,)"
+loaderVersion="[47,)"
 license="MIT"
 
 [[mods]]
@@ -7,21 +7,21 @@ modId="struts"
 version="${mod_version}"
 displayName="Strut Your Stuff"
 authors="Cake"
-description='''Extracted girder strut library for NeoForge.'''
+description='''Extracted girder strut library for Forge.'''
 
 [[mixins]]
 config="struts.mixins.json"
 
 [[dependencies.struts]]
-modId="neoforge"
-type="required"
-versionRange="[21.1,)"
+modId="forge"
+mandatory=true
+versionRange="[47,)"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.struts]]
 modId="create"
-type="optional"
+mandatory=false
 versionRange="*"
 ordering="NONE"
 side="BOTH"

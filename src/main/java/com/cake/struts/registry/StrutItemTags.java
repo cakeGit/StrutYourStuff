@@ -9,6 +9,6 @@ public class StrutItemTags {
 
     public static final TagKey<Item> WRENCHES = TagKey.create(
             Registries.ITEM,
-            ResourceLocation.fromNamespaceAndPath("struts", "wrenches"));
+            new ResourceLocation("struts", "wrenches"));
 
 }

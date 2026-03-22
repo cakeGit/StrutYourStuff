@@ -6,10 +6,9 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.ChunkRenderTypeSet;
-import net.neoforged.neoforge.client.model.BakedModelWrapper;
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.common.util.TriState;
+import net.minecraftforge.client.ChunkRenderTypeSet;
+import net.minecraftforge.client.model.BakedModelWrapper;
+import net.minecraftforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +26,7 @@ public final class StrutBakedModel extends BakedModelWrapper<BakedModel> {
     public StrutBakedModel(final BakedModel originalModel, final List<BakedQuad> quads) {
         super(originalModel);
         this.shadedQuads = quads.stream()
-                .map(q -> q.isShade() ? q : new BakedQuad(q.getVertices(), q.getTintIndex(), q.getDirection(), q.getSprite(), true, q.hasAmbientOcclusion()))
+                .map(q -> q.isShade() ? q : new BakedQuad(q.getVertices(), q.getTintIndex(), q.getDirection(), q.getSprite(), true))
                 .toList();
     }
 
@@ -59,11 +58,6 @@ public final class StrutBakedModel extends BakedModelWrapper<BakedModel> {
     @Override
     public boolean useAmbientOcclusion() {
         return false;
-    }
-
-    @Override
-    public @NotNull TriState useAmbientOcclusion(final @NotNull BlockState state, final @NotNull ModelData data, final @NotNull RenderType renderType) {
-        return TriState.FALSE;
     }
 
     @Override

@@ -58,8 +58,8 @@ public class BlockyStrutLineGeometry {
 
         this.halfX = (shapeSizeXPixels / 16.0) / 2.0;
         this.halfY = (shapeSizeYPixels / 16.0) / 2.0;
-        this.fromAttachment = Vec3.atCenterOf(from).relative(fromFacing, -SURFACE_OFFSET);
-        this.toAttachment = Vec3.atCenterOf(to).relative(toFacing, -SURFACE_OFFSET);
+        this.fromAttachment = Vec3.atCenterOf(from).add(fromFacing.getStepX() * -SURFACE_OFFSET, fromFacing.getStepY() * -SURFACE_OFFSET, fromFacing.getStepZ() * -SURFACE_OFFSET);
+        this.toAttachment = Vec3.atCenterOf(to).add(toFacing.getStepX() * -SURFACE_OFFSET, toFacing.getStepY() * -SURFACE_OFFSET, toFacing.getStepZ() * -SURFACE_OFFSET);
         this.positions = calculatePositions();
     }
 
@@ -278,7 +278,9 @@ public class BlockyStrutLineGeometry {
         //Note this basically handles clipping attachments already since it cant exceed the bounds
         final BlockPos fromBlock = BlockPos.containing(fromAttachment);
         final BlockPos toBlock = BlockPos.containing(toAttachment);
-        return BlockPos.betweenClosedStream(BlockPos.min(fromBlock, toBlock), BlockPos.max(fromBlock, toBlock))
+        final BlockPos minPos = new BlockPos(Math.min(fromBlock.getX(), toBlock.getX()), Math.min(fromBlock.getY(), toBlock.getY()), Math.min(fromBlock.getZ(), toBlock.getZ()));
+        final BlockPos maxPos = new BlockPos(Math.max(fromBlock.getX(), toBlock.getX()), Math.max(fromBlock.getY(), toBlock.getY()), Math.max(fromBlock.getZ(), toBlock.getZ()));
+        return BlockPos.betweenClosedStream(minPos, maxPos)
                 .filter((block) ->
                         satLineToSquare(fromAttachment, difference, block, lineWidth, localXDirection, localYDirection))
                 .map(BlockPos::new)

@@ -8,7 +8,6 @@ import com.cake.struts.content.shape.StrutConnectionShape;
 import com.cake.struts.content.structure.BlockyStrutLineGeometry;
 import com.cake.struts.internal.microliner.Microliner;
 import com.cake.struts.internal.microliner.MicrolinerParams;
-import com.cake.struts.registry.StrutDataComponents;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -45,8 +44,8 @@ public class StrutPlacementEffects {
         if (level == null) {
             return;
         }
-        final BlockPos fromPos = heldItem.get(StrutDataComponents.GIRDER_STRUT_FROM);
-        final Direction fromFace = heldItem.get(StrutDataComponents.GIRDER_STRUT_FROM_FACE);
+        final BlockPos fromPos = StrutBlockItem.getBlockPosTagStatic(heldItem, "GirderStrutFrom");
+        final Direction fromFace = StrutBlockItem.getDirectionTagStatic(heldItem, "GirderStrutFromFace");
 
         if (fromPos == null) {
             return;
@@ -152,8 +151,8 @@ public class StrutPlacementEffects {
             return strutBlock.getModelType();
         }
         return new StrutModelType(
-                ResourceLocation.fromNamespaceAndPath("struts", "block/girder_strut/girder_strut_segment"),
-                ResourceLocation.fromNamespaceAndPath("struts", "block/industrial_iron_block")
+                new ResourceLocation("struts", "block/girder_strut/girder_strut_segment"),
+                new ResourceLocation("struts", "block/industrial_iron_block")
         );
     }
 

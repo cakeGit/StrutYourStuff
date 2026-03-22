@@ -16,7 +16,7 @@ public interface MicrolinerOutline {
      */
     static void renderLine(final PoseStack poseStack, final VertexConsumer consumer, final Vec3 frompos, final Vec3 toPos, final float r, final float g, final float b, final float a) {
         final PoseStack.Pose last = poseStack.last();
-        consumer.addVertex(last, (float) frompos.x, (float) frompos.y, (float) frompos.z).setColor(r, g, b, a).setNormal(last, 0, 1, 0);
-        consumer.addVertex(last, (float) toPos.x, (float) toPos.y, (float) toPos.z).setColor(r, g, b, a).setNormal(last, 0, 1, 0);
+        consumer.vertex(last.pose(), (float) frompos.x, (float) frompos.y, (float) frompos.z).color(r, g, b, a).normal(last.normal(), 0, 1, 0).endVertex();
+        consumer.vertex(last.pose(), (float) toPos.x, (float) toPos.y, (float) toPos.z).color(r, g, b, a).normal(last.normal(), 0, 1, 0).endVertex();
     }
 }

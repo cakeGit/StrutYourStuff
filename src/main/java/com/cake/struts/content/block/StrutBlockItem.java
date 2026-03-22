@@ -1,6 +1,5 @@
 package com.cake.struts.content.block;
 
-import com.cake.struts.registry.StrutDataComponents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -40,9 +39,9 @@ public class StrutBlockItem extends BlockItem {
         final Direction face = context.getClickedFace();
 
         if (context.isSecondaryUseActive()) {
-            if (stack.has(StrutDataComponents.GIRDER_STRUT_FROM) || stack.has(StrutDataComponents.GIRDER_STRUT_FROM_FACE)) {
-                stack.remove(StrutDataComponents.GIRDER_STRUT_FROM);
-                stack.remove(StrutDataComponents.GIRDER_STRUT_FROM_FACE);
+            if (hasTag(stack, "GirderStrutFrom") || hasTag(stack, "GirderStrutFromFace")) {
+                removeTag(stack, "GirderStrutFrom");
+                removeTag(stack, "GirderStrutFromFace");
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
             return InteractionResult.PASS;
@@ -54,21 +53,21 @@ public class StrutBlockItem extends BlockItem {
             targetFace = level.getBlockState(placementPos).getValue(StrutBlock.FACING);
         }
 
-        if (!stack.has(StrutDataComponents.GIRDER_STRUT_FROM)) {
+        if (!hasTag(stack, "GirderStrutFrom")) {
             if (placementPos == null) {
                 return InteractionResult.FAIL;
             }
 
-            stack.set(StrutDataComponents.GIRDER_STRUT_FROM, placementPos);
-            stack.set(StrutDataComponents.GIRDER_STRUT_FROM_FACE, targetFace);
+            setBlockPosTag(stack, "GirderStrutFrom", placementPos);
+            setDirectionTag(stack, "GirderStrutFromFace", targetFace);
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
-        final BlockPos fromPos = stack.get(StrutDataComponents.GIRDER_STRUT_FROM);
-        Direction fromFace = stack.get(StrutDataComponents.GIRDER_STRUT_FROM_FACE);
+        final BlockPos fromPos = getBlockPosTag(stack, "GirderStrutFrom");
+        Direction fromFace = getDirectionTag(stack, "GirderStrutFromFace");
         if (fromPos == null) {
-            stack.remove(StrutDataComponents.GIRDER_STRUT_FROM);
-            stack.remove(StrutDataComponents.GIRDER_STRUT_FROM_FACE);
+            removeTag(stack, "GirderStrutFrom");
+            removeTag(stack, "GirderStrutFromFace");
             return InteractionResult.FAIL;
         }
 
@@ -89,22 +88,22 @@ public class StrutBlockItem extends BlockItem {
             final ConnectionResult result = tryConnect(context, fromPos, fromFace, placementPos, targetFace);
             if (result != ConnectionResult.SUCCESS) {
                 if (result == ConnectionResult.INVALID) {
-                    stack.remove(StrutDataComponents.GIRDER_STRUT_FROM);
-                    stack.remove(StrutDataComponents.GIRDER_STRUT_FROM_FACE);
+                    removeTag(stack, "GirderStrutFrom");
+                    removeTag(stack, "GirderStrutFromFace");
                 }
                 return InteractionResult.FAIL;
             }
         }
 
-        stack.remove(StrutDataComponents.GIRDER_STRUT_FROM);
-        stack.remove(StrutDataComponents.GIRDER_STRUT_FROM_FACE);
+        removeTag(stack, "GirderStrutFrom");
+        removeTag(stack, "GirderStrutFromFace");
 
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Override
     public boolean isFoil(final ItemStack stack) {
-        return stack.has(StrutDataComponents.GIRDER_STRUT_FROM) || super.isFoil(stack);
+        return hasTag(stack, "GirderStrutFrom") || super.isFoil(stack);
     }
 
     public static boolean isValidConnection(final Level level, final BlockPos fromPos, final Direction fromFace, final BlockPos toPos, final Direction toFace) {
@@ -366,6 +365,45 @@ public class StrutBlockItem extends BlockItem {
         SUCCESS,
         INVALID,
         MISSING_ITEMS
+    }
+
+    private static void setBlockPosTag(final ItemStack stack, final String key, final BlockPos pos) {
+        stack.getOrCreateTag().putLong(key, pos.asLong());
+    }
+
+    private static BlockPos getBlockPosTag(final ItemStack stack, final String key) {
+        if (!stack.hasTag() || !stack.getTag().contains(key)) return null;
+        return BlockPos.of(stack.getTag().getLong(key));
+    }
+
+    private static void setDirectionTag(final ItemStack stack, final String key, final Direction dir) {
+        stack.getOrCreateTag().putInt(key, dir.get3DDataValue());
+    }
+
+    private static Direction getDirectionTag(final ItemStack stack, final String key) {
+        if (!stack.hasTag() || !stack.getTag().contains(key)) return null;
+        return Direction.from3DDataValue(stack.getTag().getInt(key));
+    }
+
+    private static boolean hasTag(final ItemStack stack, final String key) {
+        return stack.hasTag() && stack.getTag().contains(key);
+    }
+
+    public static BlockPos getBlockPosTagStatic(final ItemStack stack, final String key) {
+        if (!stack.hasTag() || !stack.getTag().contains(key)) return null;
+        return BlockPos.of(stack.getTag().getLong(key));
+    }
+
+    public static Direction getDirectionTagStatic(final ItemStack stack, final String key) {
+        if (!stack.hasTag() || !stack.getTag().contains(key)) return null;
+        return Direction.from3DDataValue(stack.getTag().getInt(key));
+    }
+
+    private static void removeTag(final ItemStack stack, final String key) {
+        if (stack.hasTag()) {
+            stack.getTag().remove(key);
+            if (stack.getTag().isEmpty()) stack.setTag(null);
+        }
     }
 
 }

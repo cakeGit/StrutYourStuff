@@ -120,7 +120,7 @@ public abstract class StrutBlock extends Block implements SimpleWaterloggedBlock
 
     @Override
     public @NotNull BlockState playerWillDestroy(final @NotNull Level level, final @NotNull BlockPos pos, final @NotNull BlockState state, final Player player) {
-        final boolean shouldPreventDrops = player.hasInfiniteMaterials();
+        final boolean shouldPreventDrops = player.isCreative();
 
         if (shouldPreventDrops && !level.isClientSide) {
             destroyConnectedStrut(level, pos, false);

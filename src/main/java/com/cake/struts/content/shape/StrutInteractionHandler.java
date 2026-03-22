@@ -9,6 +9,7 @@ import com.cake.struts.content.structure.BlockyStrutLineGeometry;
 import com.cake.struts.content.structure.ConnectionKey;
 import com.cake.struts.internal.util.LevelSafeStorage;
 import com.cake.struts.network.BreakStrutPacket;
+import com.cake.struts.network.StrutPackets;
 import com.cake.struts.registry.StrutItemTags;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -23,7 +24,6 @@ import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -31,15 +31,14 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.InputEvent;
-import net.neoforged.neoforge.client.event.RenderHighlightEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-import net.neoforged.neoforge.event.level.LevelEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RenderHighlightEvent;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
@@ -52,7 +51,7 @@ import java.util.Map;
  * updated connection data on the client, and {@link #removeOutlineShapes} when
  * the block entity is removed.
  */
-@EventBusSubscriber(modid = "struts", value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = "struts", value = Dist.CLIENT)
 public class StrutInteractionHandler {
 
     private static final LevelSafeStorage<LevelStrutOutlineStore> STORES =
@@ -136,7 +135,7 @@ public class StrutInteractionHandler {
 
         final boolean isUse = event.getKeyMapping() == mc.options.keyUse;
         if (isUse && mc.player.isShiftKeyDown() && isActive(mc.player.getMainHandItem())) {
-            PacketDistributor.sendToServer(new BreakStrutPacket(selectedKey, true));
+            StrutPackets.CHANNEL.sendToServer(new BreakStrutPacket(selectedKey, true));
             resetBreakProgress(mc.level, mc.player);
             event.setCanceled(true);
             event.setSwingHand(true);
@@ -144,7 +143,8 @@ public class StrutInteractionHandler {
     }
 
     @SubscribeEvent
-    public static void onClientTick(final ClientTickEvent.Post event) {
+    public static void onClientTick(final TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
         final Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) {
             clearSelection();
@@ -160,7 +160,7 @@ public class StrutInteractionHandler {
         store.validate(level);
 
         final Vec3 eye = player.getEyePosition();
-        final double range = player.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE) + 1.0;
+        final double range = 5.0 + 1.0;
         final Vec3 look = player.getLookAngle();
         final Vec3 traceTarget = eye.add(look.scale(range));
 
@@ -309,7 +309,7 @@ public class StrutInteractionHandler {
         }
 
         if (breakProgress >= 1.0F) {
-            PacketDistributor.sendToServer(new BreakStrutPacket(key, false));
+            StrutPackets.CHANNEL.sendToServer(new BreakStrutPacket(key, false));
             level.levelEvent(player, 2001, currentBreakPos, Block.getId(blockState));
             resetBreakProgress(level, player);
         }
@@ -361,12 +361,14 @@ public class StrutInteractionHandler {
         final float ny = len > 0 ? dy / len : 1f;
         final float nz = len > 0 ? dz / len : 0f;
 
-        vb.addVertex(poseMatrix, ax, ay, az)
-                .setColor(0.0F, 0.0F, 0.0F, 0.4F)
-                .setNormal(pose.copy(), nx, ny, nz);
-        vb.addVertex(poseMatrix, bx, by, bz)
-                .setColor(0.0F, 0.0F, 0.0F, 0.4F)
-                .setNormal(pose.copy(), nx, ny, nz);
+        vb.vertex(poseMatrix, ax, ay, az)
+                .color(0.0F, 0.0F, 0.0F, 0.4F)
+                .normal(pose.normal(), nx, ny, nz)
+                .endVertex();
+        vb.vertex(poseMatrix, bx, by, bz)
+                .color(0.0F, 0.0F, 0.0F, 0.4F)
+                .normal(pose.normal(), nx, ny, nz)
+                .endVertex();
     }
 
     private static void resetBreakProgress(final @Nullable ClientLevel level, final @Nullable LocalPlayer player) {

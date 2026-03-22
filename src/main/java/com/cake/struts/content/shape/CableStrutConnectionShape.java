@@ -288,12 +288,14 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
         final float bl = (color & 0xFF) / 255f;
         final float alpha = ((color >> 24) & 0xFF) / 255f;
 
-        vb.addVertex(poseMatrix, (float) a.x, (float) a.y, (float) a.z)
-                .setColor(r, g, bl, alpha)
-                .setNormal(pose.copy(), nx, ny, nz);
-        vb.addVertex(poseMatrix, (float) b.x, (float) b.y, (float) b.z)
-                .setColor(r, g, bl, alpha)
-                .setNormal(pose.copy(), nx, ny, nz);
+        vb.vertex(poseMatrix, (float) a.x, (float) a.y, (float) a.z)
+                .color(r, g, bl, alpha)
+                .normal(pose.normal(), nx, ny, nz)
+                .endVertex();
+        vb.vertex(poseMatrix, (float) b.x, (float) b.y, (float) b.z)
+                .color(r, g, bl, alpha)
+                .normal(pose.normal(), nx, ny, nz)
+                .endVertex();
     }
 
     private void buildFrames() {

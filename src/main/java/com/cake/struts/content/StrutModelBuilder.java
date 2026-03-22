@@ -12,10 +12,9 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.client.model.BakedModelWrapper;
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.client.model.data.ModelProperty;
-import net.neoforged.neoforge.common.util.TriState;
+import net.minecraftforge.client.model.BakedModelWrapper;
+import net.minecraftforge.client.model.data.ModelData;
+import net.minecraftforge.client.model.data.ModelProperty;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,11 +36,6 @@ public class StrutModelBuilder extends BakedModelWrapper<BakedModel> {
     @Override
     public boolean useAmbientOcclusion() {
         return false;
-    }
-
-    @Override
-    public @NotNull TriState useAmbientOcclusion(final @NotNull BlockState state, final @NotNull ModelData data, final @NotNull RenderType renderType) {
-        return TriState.FALSE;
     }
 
     @Override
@@ -111,15 +105,15 @@ public class StrutModelBuilder extends BakedModelWrapper<BakedModel> {
             final Direction facing = state.getValue(StrutBlock.FACING);
             final CableStrutInfo cableRenderInfo = block.getCableRenderInfo();
             final Vec3 blockOrigin = Vec3.atLowerCornerOf(pos);
-            final Vec3 facePoint = Vec3.atCenterOf(pos).relative(facing, -SURFACE_CLIPPING_OFFSET);
-            final Vec3 thisSurface = Vec3.atCenterOf(pos).relative(facing, -SURFACE_OFFSET);
+            final Vec3 facePoint = Vec3.atCenterOf(pos).add(facing.getStepX() * -SURFACE_CLIPPING_OFFSET, facing.getStepY() * -SURFACE_CLIPPING_OFFSET, facing.getStepZ() * -SURFACE_CLIPPING_OFFSET);
+            final Vec3 thisSurface = Vec3.atCenterOf(pos).add(facing.getStepX() * -SURFACE_OFFSET, facing.getStepY() * -SURFACE_OFFSET, facing.getStepZ() * -SURFACE_OFFSET);
 
             final List<GirderConnection> connections = new ArrayList<>();
 
             for (final GirderConnectionNode data : blockEntity.getConnectionsCopy()) {
                 final BlockPos otherPos = data.absoluteFrom(pos);
                 final Direction otherFacing = data.peerFacing();
-                final Vec3 otherSurface = Vec3.atCenterOf(otherPos).relative(otherFacing, -SURFACE_OFFSET);
+                final Vec3 otherSurface = Vec3.atCenterOf(otherPos).add(otherFacing.getStepX() * -SURFACE_OFFSET, otherFacing.getStepY() * -SURFACE_OFFSET, otherFacing.getStepZ() * -SURFACE_OFFSET);
                 final Vec3 span = otherSurface.subtract(thisSurface);
                 if (span.lengthSqr() < 1.0e-4) {
                     continue;

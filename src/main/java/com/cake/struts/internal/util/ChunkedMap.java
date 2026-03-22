@@ -3,10 +3,10 @@ package com.cake.struts.internal.util;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.level.ChunkEvent;
-import net.neoforged.neoforge.event.level.LevelEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.event.level.ChunkEvent;
+import net.minecraftforge.event.level.LevelEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -85,7 +85,7 @@ public class ChunkedMap<T extends ChunkedMap.IChunkedObject> {
         LEVEL_BOUND_MAPS.remove(this);
     }
 
-    @EventBusSubscriber(modid = "struts")
+    @Mod.EventBusSubscriber(modid = "struts")
     public static class ChunkedMapEvents {
         @SubscribeEvent
         public static void onChunkUnload(final ChunkEvent.Unload event) {

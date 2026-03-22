@@ -8,7 +8,6 @@ import com.cake.struts.content.structure.GirderStrutStructureShapes;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -32,8 +31,8 @@ import java.util.function.BiConsumer;
 public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowLighter {
 
     private static final StrutModelType DEFAULT_MODEL_TYPE = new StrutModelType(
-            ResourceLocation.fromNamespaceAndPath("struts", "block/girder_strut/girder_strut_segment"),
-            ResourceLocation.fromNamespaceAndPath("struts", "block/industrial_iron_block"));
+            new ResourceLocation("struts", "block/girder_strut/girder_strut_segment"),
+            new ResourceLocation("struts", "block/industrial_iron_block"));
 
     /**
      * Set on the client during startup to receive connection-change notifications.
@@ -134,8 +133,8 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     }
 
     @Override
-    protected void saveAdditional(final @NotNull CompoundTag tag, final HolderLookup.@NotNull Provider registries) {
-        super.saveAdditional(tag, registries);
+    protected void saveAdditional(final @NotNull CompoundTag tag) {
+        super.saveAdditional(tag);
         final ListTag list = new ListTag();
         for (final GirderConnectionNode p : connections) {
             final CompoundTag ct = new CompoundTag();
@@ -156,8 +155,8 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     }
 
     @Override
-    protected void loadAdditional(final @NotNull CompoundTag tag, final HolderLookup.@NotNull Provider registries) {
-        super.loadAdditional(tag, registries);
+    public void load(final @NotNull CompoundTag tag) {
+        super.load(tag);
         connections.clear();
         unresolvedLegacyConnections.clear();
         if (tag.contains("Connections", Tag.TAG_LIST)) {
@@ -177,15 +176,14 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     }
 
     @Override
-    public @NotNull CompoundTag getUpdateTag(final HolderLookup.@NotNull Provider registries) {
-        final CompoundTag tag = super.getUpdateTag(registries);
-        saveAdditional(tag, registries);
+    public @NotNull CompoundTag getUpdateTag() {
+        final CompoundTag tag = super.getUpdateTag();
+        saveAdditional(tag);
         return tag;
     }
 
-    @Override
-    public void handleUpdateTag(final @NotNull CompoundTag tag, final HolderLookup.@NotNull Provider registries) {
-        loadAdditional(tag, registries);
+    public void handleUpdateTag(final @NotNull CompoundTag tag) {
+        load(tag);
         connectionQuadCache = null;
         if (level != null && level.isClientSide) {
             StrutsFlywheelCompatLoader.queueUpdate(this);
@@ -201,10 +199,10 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     }
 
     @Override
-    public void onDataPacket(final @NotNull Connection connection, final ClientboundBlockEntityDataPacket packet, final HolderLookup.@NotNull Provider registries) {
+    public void onDataPacket(final @NotNull Connection connection, final ClientboundBlockEntityDataPacket packet) {
         final CompoundTag tag = packet.getTag();
         if (tag != null) {
-            handleUpdateTag(tag, registries);
+            handleUpdateTag(tag);
         }
     }
 
@@ -237,7 +235,8 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     }
 
     public Vec3 getAttachment() {
-        return Vec3.atCenterOf(getBlockPos()).relative(getBlockState().getValue(StrutBlock.FACING), -0.4);
+        final Direction facing = this.getBlockState().getValue(StrutBlock.FACING);
+        return Vec3.atCenterOf(this.getBlockPos()).add(facing.getStepX() * -0.4, facing.getStepY() * -0.4, facing.getStepZ() * -0.4);
     }
 
     public Direction getAttachmentDirection() {

@@ -3,7 +3,7 @@
   "minVersion": "0.8",
   "package": "com.cake.struts.mixin",
   "plugin": "com.cake.struts.mixin.compat.create.StrutsCompatMixinPlugin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_17",
   "mixins": [
     "StrutRenderSystemAccessor",
     "compat.create.StrutTransformCompat",

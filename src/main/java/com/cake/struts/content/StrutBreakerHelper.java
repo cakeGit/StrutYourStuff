@@ -33,7 +33,7 @@ public class StrutBreakerHelper {
         if (shouldRemoveAnchor(level, target.b(), 1)) {
             anchorsToRemove.add(target.b());
         }
-        if (!player.hasInfiniteMaterials()) {
+        if (!player.isCreative()) {
             final List<ItemStack> drops = collectAnchorDrops(level, anchorsToRemove);
             if (!canFitAll(player, drops)) {
                 return;

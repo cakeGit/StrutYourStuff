@@ -88,7 +88,7 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
         final int[] vertices = quads.getVertices();
         final Vec3i vec3i = quads.getDirection().getNormal();
         final Matrix4f matrix4f = p_85988_.pose();
-        final Vector3f vector3f = p_85988_.transformNormal((float) vec3i.getX(), (float) vec3i.getY(), (float) vec3i.getZ(), new Vector3f());
+        final Vector3f vector3f = p_85988_.normal().transform(new Vector3f((float) vec3i.getX(), (float) vec3i.getY(), (float) vec3i.getZ()));
         final int i = 8;
         final int j = vertices.length / 8;
         final int k = (int) (p_331416_ * 255.0F);
@@ -125,9 +125,15 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
                 final float f9 = bytebuffer.getFloat(20);
                 final Vector3f worldPos = new Vector3f(f, f1, f2);
                 final int j1 = consumer.applyBakedLighting(lighter.apply(worldPos), bytebuffer);
-                final Vector3f vector3f1 = matrix4f.transformPosition(worldPos);
+                final Vector3f vector3f1 = matrix4f.transformPosition(f, f1, f2, new Vector3f());
                 consumer.applyBakedNormals(vector3f, bytebuffer, p_85988_.normal());
-                consumer.addVertex(vector3f1.x(), vector3f1.y(), vector3f1.z(), i1, f10, f9, p_85993_, j1, vector3f.x(), vector3f.y(), vector3f.z());
+                consumer.vertex(vector3f1.x(), vector3f1.y(), vector3f1.z())
+                        .color((i1 >> 16) & 0xFF, (i1 >> 8) & 0xFF, i1 & 0xFF, (i1 >> 24) & 0xFF)
+                        .uv(f10, f9)
+                        .overlayCoords(p_85993_)
+                        .uv2(j1)
+                        .normal(vector3f.x(), vector3f.y(), vector3f.z())
+                        .endVertex();
             }
         }
     }

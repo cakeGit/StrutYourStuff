@@ -1,39 +1,40 @@
 package com.cake.struts.network;
 
-import com.cake.struts.StrutYourStuff;
 import com.cake.struts.content.StrutBreakerHelper;
 import com.cake.struts.content.structure.ConnectionKey;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
-import org.jetbrains.annotations.NotNull;
+import net.minecraftforge.network.NetworkEvent;
 
-public record BreakStrutPacket(ConnectionKey target, boolean isWrench) implements CustomPacketPayload {
+import java.util.function.Supplier;
 
-    public static final CustomPacketPayload.Type<BreakStrutPacket> TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(StrutYourStuff.MOD_ID, "break_strut"));
+public class BreakStrutPacket {
 
-    public static final StreamCodec<FriendlyByteBuf, BreakStrutPacket> CODEC = StreamCodec.of(
-            (buf, packet) -> {
-                buf.writeBlockPos(packet.target().a());
-                buf.writeBlockPos(packet.target().b());
-                buf.writeBoolean(packet.isWrench());
-            },
-            buf -> new BreakStrutPacket(new ConnectionKey(buf.readBlockPos(), buf.readBlockPos()), buf.readBoolean())
-    );
+    private final ConnectionKey target;
+    private final boolean isWrench;
 
-    @Override
-    public @NotNull Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+    public BreakStrutPacket(final ConnectionKey target, final boolean isWrench) {
+        this.target = target;
+        this.isWrench = isWrench;
     }
 
-    public void handle(final IPayloadContext context) {
-        context.enqueueWork(() -> {
-            final Player player = context.player();
-            StrutBreakerHelper.breakStrut(player, target, isWrench);
+    public static void encode(final BreakStrutPacket packet, final FriendlyByteBuf buf) {
+        buf.writeBlockPos(packet.target.a());
+        buf.writeBlockPos(packet.target.b());
+        buf.writeBoolean(packet.isWrench);
+    }
+
+    public static BreakStrutPacket decode(final FriendlyByteBuf buf) {
+        return new BreakStrutPacket(new ConnectionKey(buf.readBlockPos(), buf.readBlockPos()), buf.readBoolean());
+    }
+
+    public static void handle(final BreakStrutPacket packet, final Supplier<NetworkEvent.Context> ctx) {
+        ctx.get().enqueueWork(() -> {
+            final Player player = ctx.get().getSender();
+            if (player != null) {
+                StrutBreakerHelper.breakStrut(player, packet.target, packet.isWrench);
+            }
         });
+        ctx.get().setPacketHandled(true);
     }
 }

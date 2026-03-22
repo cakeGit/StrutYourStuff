@@ -1,18 +1,20 @@
 package com.cake.struts.registry;
 
 import com.cake.struts.content.structure.GirderStrutStructureBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
-import net.neoforged.neoforge.registries.DeferredBlock;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 public class StrutBlocks {
 
-    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks("struts");
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, "struts");
 
-    public static final DeferredBlock<GirderStrutStructureBlock> GIRDER_STRUT_STRUCTURE =
+    public static final RegistryObject<GirderStrutStructureBlock> GIRDER_STRUT_STRUCTURE =
             BLOCKS.register("girder_strut_structure", () -> new GirderStrutStructureBlock(
                     BlockBehaviour.Properties.of()
                             .noLootTable()
