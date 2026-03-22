@@ -1,0 +1,31 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="struts_test"
+version="${mod_version}"
+displayName="Struts Test Mod"
+authors="Cake"
+description='''Test mod for validating StrutYourStuff backport.'''
+
+[[dependencies.struts_test]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.struts_test]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.21)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.struts_test]]
+modId="struts"
+mandatory=true
+versionRange="[1.0.0,)"
+ordering="AFTER"
+side="BOTH"

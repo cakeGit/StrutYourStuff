@@ -41,15 +41,15 @@ public class StrutFlywheelVisual extends AbstractBlockEntityVisual<StrutBlockEnt
 
     @Override
     public void updateLight(final float partialTick) {
-        if (instance != null) {
-            relight(instance);
-            instance.handle().setChanged();
+        if (this.instance != null) {
+            relight(this.instance);
+            this.instance.handle().setChanged();
         }
     }
 
     @Override
     public void collectCrumblingInstances(final Consumer<@Nullable Instance> consumer) {
-        consumer.accept(instance);
+        consumer.accept(this.instance);
     }
 
     @Override
@@ -64,33 +64,33 @@ public class StrutFlywheelVisual extends AbstractBlockEntityVisual<StrutBlockEnt
         }
 
         final int connectionHash = blockEntity.getConnectionHash();
-        if (connectionHash == cachedConnectionHash && cachedQuads != null && cachedModel != null && instance != null) {
+        if (connectionHash == this.cachedConnectionHash && this.cachedQuads != null && this.cachedModel != null && this.instance != null) {
             return;
         }
 
-        if (cachedQuads == null || connectionHash != cachedConnectionHash) {
-            cachedQuads = resolveQuads(strutBlock);
-            cachedConnectionHash = connectionHash;
-            cachedModel = null;
+        if (this.cachedQuads == null || connectionHash != this.cachedConnectionHash) {
+            this.cachedQuads = resolveQuads(strutBlock);
+            this.cachedConnectionHash = connectionHash;
+            this.cachedModel = null;
         }
 
-        if (cachedQuads.isEmpty()) {
+        if (this.cachedQuads.isEmpty()) {
             clearInstance();
             return;
         }
 
-        if (cachedModel == null) {
-            cachedModel = buildModel(cachedQuads);
+        if (this.cachedModel == null) {
+            this.cachedModel = buildModel(this.cachedQuads);
         }
 
-        if (instance != null) {
-            instance.delete();
+        if (this.instance != null) {
+            this.instance.delete();
         }
 
-        instance = instancerProvider().instancer(InstanceTypes.TRANSFORMED, cachedModel).createInstance();
-        instance.setIdentityTransform().translate(getVisualPosition());
-        relight(instance);
-        instance.handle().setChanged();
+        this.instance = instancerProvider().instancer(InstanceTypes.TRANSFORMED, this.cachedModel).createInstance();
+        this.instance.setIdentityTransform().translate(getVisualPosition());
+        relight(this.instance);
+        this.instance.handle().setChanged();
     }
 
     private @NotNull List<BakedQuad> resolveQuads(final @NotNull StrutBlock strutBlock) {
@@ -104,10 +104,7 @@ public class StrutFlywheelVisual extends AbstractBlockEntityVisual<StrutBlockEnt
     private @NotNull Model buildModel(final @NotNull List<BakedQuad> quads) {
         final BakedModel baseModel = Minecraft.getInstance().getBlockRenderer().getBlockModel(blockState);
         final BakedModel model = new StrutBakedModel(baseModel, quads);
-        // StrutBakedModel keeps quads shaded so directional diffuse is baked during model buffering.
-        // Keep Flywheel cardinal lighting disabled here to avoid double-applying diffuse.
-        // Use the BiFunction overload for runtime compatibility with Flywheel builds missing BlockMaterialFunction.
-        return new BakedModelBuilder(model)
+        return BakedModelBuilder.create(model)
                 .level(level)
                 .pos(pos)
                 .materialFunc((renderType, ignoredShaded) -> ModelUtil.getMaterial(renderType, false))
@@ -115,10 +112,10 @@ public class StrutFlywheelVisual extends AbstractBlockEntityVisual<StrutBlockEnt
     }
 
     private void clearInstance() {
-        if (instance != null) {
-            instance.delete();
-            instance = null;
+        if (this.instance != null) {
+            this.instance.delete();
+            this.instance = null;
         }
-        cachedModel = null;
+        this.cachedModel = null;
     }
 }

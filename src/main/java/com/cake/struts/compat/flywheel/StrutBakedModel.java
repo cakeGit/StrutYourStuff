@@ -19,8 +19,6 @@ public final class StrutBakedModel extends BakedModelWrapper<BakedModel> {
     private static final List<BakedQuad> EMPTY = List.of();
     private static final ChunkRenderTypeSet RENDER_TYPES = ChunkRenderTypeSet.of(RenderType.solid());
 
-    // Force shade=true so Flywheel's baked-model path keeps directional diffuse consistent with the
-    // non-Flywheel BER path, which always applies diffuse shading for strut quads.
     private final List<BakedQuad> shadedQuads;
 
     public StrutBakedModel(final BakedModel originalModel, final List<BakedQuad> quads) {
@@ -32,7 +30,7 @@ public final class StrutBakedModel extends BakedModelWrapper<BakedModel> {
 
     @Override
     public @NotNull List<BakedQuad> getQuads(final @Nullable BlockState state, final @Nullable Direction side, final @NotNull RandomSource rand) {
-        return side == null ? shadedQuads : EMPTY;
+        return side == null ? this.shadedQuads : EMPTY;
     }
 
     @Override
@@ -47,7 +45,7 @@ public final class StrutBakedModel extends BakedModelWrapper<BakedModel> {
         if (renderType != null && !RENDER_TYPES.contains(renderType)) {
             return EMPTY;
         }
-        return shadedQuads;
+        return this.shadedQuads;
     }
 
     @Override

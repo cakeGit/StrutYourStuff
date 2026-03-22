@@ -27,6 +27,8 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
 
             mods {
                 "${mod_id}" {
@@ -55,6 +57,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     maven { url = 'https://maven.createmod.net' }
+    maven { url = 'https://maven.tterrag.com' }
     maven {
         name = 'azmod-maven'
         url = uri("https://maven.azmod.net/${findProperty('azmodRepository') ?: 'releases'}")
@@ -63,8 +66,8 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    compileOnly fg.deobf("com.simibubi.create:create-${minecraft_version}:+")
-    // compileOnly fg.deobf("dev.engine-room.flywheel:flywheel-forge-api-${minecraft_version}:${flywheel_version}")
+    compileOnly fg.deobf("dev.engine-room.flywheel:flywheel-forge-api-${minecraft_version}:${flywheel_version}")
+    runtimeOnly fg.deobf("dev.engine-room.flywheel:flywheel-forge-${minecraft_version}:${flywheel_version}")
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -89,6 +92,7 @@ tasks.register('sourcesJar', Jar) {
 tasks.named('jar', Jar).configure {
     manifest {
         attributes('FMLModType': 'GAMELIBRARY')
+        attributes('MixinConfigs': 'struts.mixins.json')
     }
     finalizedBy 'reobfJar'
 }

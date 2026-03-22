@@ -18,10 +18,3 @@ mandatory=true
 versionRange="[47,)"
 ordering="NONE"
 side="BOTH"
-
-[[dependencies.struts]]
-modId="create"
-mandatory=false
-versionRange="*"
-ordering="NONE"
-side="BOTH"

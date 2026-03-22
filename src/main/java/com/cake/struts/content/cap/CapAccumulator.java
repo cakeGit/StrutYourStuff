@@ -343,8 +343,8 @@ public final class CapAccumulator {
         for (final int index : loop) {
             final CapVertex vertex = uniqueVertices.get(index);
             final Vector3f toVertex = new Vector3f(vertex.position()).sub(uvOrigin);
-            final float u = Math.clamp(toVertex.dot(uvRight), -0.5f, 0.5f);
-            final float v = Math.clamp(toVertex.dot(uvUp), -0.5f, 0.5f);
+            final float u = Math.max(-0.5f, Math.min(0.5f, toVertex.dot(uvRight)));
+            final float v = Math.max(-0.5f, Math.min(0.5f, toVertex.dot(uvUp)));
             // Update vertex UVs
             uniqueVertices.set(index, new CapVertex(vertex.position(), uScale * u + uOffset, vScale * v + vOffset, vertex.color(), vertex.light(), vertex.sourceSprite()));
         }

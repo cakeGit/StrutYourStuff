@@ -1,0 +1,70 @@
+plugins {
+    id 'java-library'
+    id 'idea'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+}
+
+group = 'com.cake.struts.testmod'
+version = '1.0.0'
+
+base {
+    archivesName = 'struts-testmod'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: 'official', version: '1.20.1'
+    copyIdeResources = true
+
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+
+            mods {
+                struts {
+                    source project(':').sourceSets.main
+                }
+                struts_test {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        client {
+            taskName 'runTestModClient'
+        }
+
+        server {
+            taskName 'runTestModServer'
+            args '--nogui'
+        }
+    }
+}
+
+repositories {
+    maven { url = 'https://maven.createmod.net' }
+    maven { url = 'https://maven.tterrag.com' }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:1.20.1-47.4.18"
+    implementation project(':')
+    runtimeOnly fg.deobf("dev.engine-room.flywheel:flywheel-forge-1.20.1:1.0.5")
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    def replaceProperties = [mod_version: version]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml']) {
+        expand replaceProperties
+    }
+}

@@ -50,13 +50,13 @@ public abstract class StrutBlock extends Block implements SimpleWaterloggedBlock
     protected abstract BlockEntityType<? extends StrutBlockEntity> getStrutBlockEntityType();
 
     @Override
-    protected @NotNull BlockState rotate(final @NotNull BlockState state, final @NotNull Rotation rotation) {
+    public @NotNull BlockState rotate(final @NotNull BlockState state, final @NotNull Rotation rotation) {
         return super.rotate(state, rotation)
                 .setValue(FACING, rotation.rotate(state.getValue(FACING)));
     }
 
     @Override
-    protected @NotNull BlockState mirror(final @NotNull BlockState state, final @NotNull Mirror mirror) {
+    public @NotNull BlockState mirror(final @NotNull BlockState state, final @NotNull Mirror mirror) {
         return super.mirror(state, mirror)
                 .setValue(FACING, mirror.mirror(state.getValue(FACING)));
     }
@@ -119,14 +119,14 @@ public abstract class StrutBlock extends Block implements SimpleWaterloggedBlock
     }
 
     @Override
-    public @NotNull BlockState playerWillDestroy(final @NotNull Level level, final @NotNull BlockPos pos, final @NotNull BlockState state, final Player player) {
+    public void playerWillDestroy(final @NotNull Level level, final @NotNull BlockPos pos, final @NotNull BlockState state, final @NotNull Player player) {
         final boolean shouldPreventDrops = player.isCreative();
 
         if (shouldPreventDrops && !level.isClientSide) {
             destroyConnectedStrut(level, pos, false);
         }
 
-        return super.playerWillDestroy(level, pos, state, player);
+        super.playerWillDestroy(level, pos, state, player);
     }
 
     private void destroyConnectedStrut(final Level level, final BlockPos pos, final boolean dropBlock) {

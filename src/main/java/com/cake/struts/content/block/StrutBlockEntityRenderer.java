@@ -13,7 +13,6 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.core.Vec3i;
 import net.minecraft.util.FastColor;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
@@ -64,12 +63,12 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
     }
 
     @Override
-    public @NotNull AABB getRenderBoundingBox(@NotNull final StrutBlockEntity blockEntity) {
-        return new AABB(blockEntity.getBlockPos()).inflate(32);
+    public int getViewDistance() {
+        return 256;
     }
 
     @Override
-    public boolean shouldRender(final @NotNull StrutBlockEntity blockEntity, final @NotNull Vec3 cameraPos) {
+    public boolean shouldRenderOffScreen(final @NotNull StrutBlockEntity blockEntity) {
         return true;
     }
 

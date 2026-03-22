@@ -9,7 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelManager;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -87,8 +86,7 @@ public class StrutModelManipulator {
         StrutSegmentMesh strutSegmentMesh = segmentMeshes.get(modelType);
         if (strutSegmentMesh == null) {
             final ModelManager modelManager = Minecraft.getInstance().getModelManager();
-            final ModelResourceLocation modelLocation = new ModelResourceLocation(modelType.segmentModelLocation(), "standalone");
-            final BakedModel bakedModel = modelManager.getModel(modelLocation);
+            final BakedModel bakedModel = modelManager.getModel(modelType.segmentModelLocation());
             final RandomSource random = RandomSource.create();
             final List<BakedQuad> bakedQuads = new ArrayList<>(bakedModel.getQuads(
                     null,
