@@ -1,5 +1,6 @@
 package com.cake.struts.testmod;
 
+import com.cake.struts.compat.flywheel.StrutsFlywheelCompatLoader;
 import com.cake.struts.content.block.StrutBlockEntityRenderer;
 import com.cake.struts.testmod.registry.TestBlockEntities;
 import com.cake.struts.testmod.registry.TestStrutDefinitions;
@@ -15,6 +16,7 @@ public class StrutsTestModClient {
     @SubscribeEvent
     public static void registerRenderers(final EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(TestBlockEntities.STRUT.get(), StrutBlockEntityRenderer::new);
+        StrutsFlywheelCompatLoader.registerStrutVisual(TestBlockEntities.STRUT.get());
     }
 
     @SubscribeEvent

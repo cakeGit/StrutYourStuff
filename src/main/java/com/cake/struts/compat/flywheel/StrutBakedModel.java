@@ -59,6 +59,11 @@ public final class StrutBakedModel extends BakedModelWrapper<BakedModel> {
     }
 
     @Override
+    public boolean useAmbientOcclusion(@NotNull BlockState state, @NotNull RenderType renderType) {
+        return false;
+    }
+
+    @Override
     public boolean usesBlockLight() {
         return true;
     }
