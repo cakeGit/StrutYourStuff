@@ -8,12 +8,9 @@ import dev.engine_room.flywheel.api.model.Model;
 import dev.engine_room.flywheel.api.visualization.VisualizationContext;
 import dev.engine_room.flywheel.lib.instance.InstanceTypes;
 import dev.engine_room.flywheel.lib.instance.TransformedInstance;
-import dev.engine_room.flywheel.lib.model.ModelUtil;
-import dev.engine_room.flywheel.lib.model.baked.BakedModelBuilder;
 import dev.engine_room.flywheel.lib.visual.AbstractBlockEntityVisual;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.resources.model.BakedModel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,94 +28,88 @@ public class StrutFlywheelVisual extends AbstractBlockEntityVisual<StrutBlockEnt
                                final @NotNull StrutBlockEntity blockEntity,
                                final float partialTick) {
         super(ctx, blockEntity, partialTick);
-        refreshModel();
+        this.refreshModel();
     }
 
     @Override
     public void update(final float partialTick) {
-        refreshModel();
+        this.refreshModel();
     }
 
     @Override
     public void updateLight(final float partialTick) {
-        if (instance != null) {
-            relight(instance);
-            instance.handle().setChanged();
-        }
+        this.cachedModel = null;
+        this.refreshModel();
     }
 
     @Override
     public void collectCrumblingInstances(final Consumer<@Nullable Instance> consumer) {
-        consumer.accept(instance);
+        consumer.accept(this.instance);
     }
 
     @Override
     protected void _delete() {
-        clearInstance();
+        this.clearInstance();
     }
 
     private void refreshModel() {
-        if (!(blockState.getBlock() instanceof final StrutBlock strutBlock)) {
-            clearInstance();
+        if (!(this.blockState.getBlock() instanceof final StrutBlock strutBlock)) {
+            this.clearInstance();
             return;
         }
 
-        final int connectionHash = blockEntity.getConnectionHash();
-        if (connectionHash == cachedConnectionHash && cachedQuads != null && cachedModel != null && instance != null) {
+        final int connectionHash = this.blockEntity.getConnectionHash();
+        if (connectionHash == this.cachedConnectionHash && this.cachedQuads != null && this.cachedModel != null && this.instance != null) {
             return;
         }
 
-        if (cachedQuads == null || connectionHash != cachedConnectionHash) {
-            cachedQuads = resolveQuads(strutBlock);
-            cachedConnectionHash = connectionHash;
-            cachedModel = null;
+        if (this.cachedQuads == null || connectionHash != this.cachedConnectionHash) {
+            this.cachedQuads = this.resolveQuads(strutBlock);
+            this.cachedConnectionHash = connectionHash;
+            this.cachedModel = null;
         }
 
-        if (cachedQuads.isEmpty()) {
-            clearInstance();
+        if (this.cachedQuads.isEmpty()) {
+            this.clearInstance();
             return;
         }
 
-        if (cachedModel == null) {
-            cachedModel = buildModel(cachedQuads);
+        if (this.cachedModel == null) {
+            final boolean constantAmbientLight = this.level instanceof final ClientLevel cl
+                    && cl.effects().constantAmbientLight();
+            this.cachedModel = FlywheelMeshBuilder.buildLitModel(this.cachedQuads, this.blockEntity.createLighter(), constantAmbientLight);
         }
 
-        if (instance != null) {
-            instance.delete();
+        if (this.instance != null) {
+            this.instance.delete();
         }
 
-        instance = instancerProvider().instancer(InstanceTypes.TRANSFORMED, cachedModel).createInstance();
-        instance.setIdentityTransform().translate(getVisualPosition());
-        relight(instance);
-        instance.handle().setChanged();
+        this.instance = this.instancerProvider().instancer(
+                InstanceTypes.TRANSFORMED,
+                this.cachedModel
+        ).createInstance();
+
+        this.instance.setIdentityTransform().translate(this.getVisualPosition());
+        this.instance.light(0);
+        this.instance.handle().setChanged();
     }
 
     private @NotNull List<BakedQuad> resolveQuads(final @NotNull StrutBlock strutBlock) {
-        final List<BakedQuad> quadCache = blockEntity.connectionQuadCache;
+        final List<BakedQuad> quadCache = this.blockEntity.connectionQuadCache;
         if (quadCache != null) {
             return quadCache;
         }
-        return StrutModelBuilder.buildConnectionQuads(level, pos, blockState, blockEntity, strutBlock.getModelType());
-    }
-
-    private @NotNull Model buildModel(final @NotNull List<BakedQuad> quads) {
-        final BakedModel baseModel = Minecraft.getInstance().getBlockRenderer().getBlockModel(blockState);
-        final BakedModel model = new StrutBakedModel(baseModel, quads);
-        // StrutBakedModel keeps quads shaded so directional diffuse is baked during model buffering.
-        // Keep Flywheel cardinal lighting disabled here to avoid double-applying diffuse.
-        // Use the BiFunction overload for runtime compatibility with Flywheel builds missing BlockMaterialFunction.
-        return new BakedModelBuilder(model)
-                .level(level)
-                .pos(pos)
-                .materialFunc((renderType, ignoredShaded) -> ModelUtil.getMaterial(renderType, false))
-                .build();
+        return StrutModelBuilder.buildConnectionQuads(
+                this.level, this.pos, this.blockState,
+                this.blockEntity, strutBlock.getModelType()
+        );
     }
 
     private void clearInstance() {
-        if (instance != null) {
-            instance.delete();
-            instance = null;
+        if (this.instance != null) {
+            this.instance.delete();
+            this.instance = null;
         }
-        cachedModel = null;
+        this.cachedModel = null;
     }
 }

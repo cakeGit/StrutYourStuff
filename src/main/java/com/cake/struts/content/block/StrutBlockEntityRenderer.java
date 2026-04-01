@@ -1,8 +1,8 @@
 package com.cake.struts.content.block;
 
 import com.cake.struts.compat.flywheel.StrutsFlywheelCompatLoader;
+import com.cake.struts.content.StrutDiffuseHelper;
 import com.cake.struts.content.StrutModelBuilder;
-import com.cake.struts.mixin.StrutRenderSystemAccessor;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -18,7 +18,6 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.joml.Vector3fc;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
@@ -132,18 +131,8 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
         }
     }
 
-    /**
-     * If your friends jumped off a cliff, would you do it too?
-     */
     private static float calculateDiffuse(final Vector3f normal) {
-        return calculateDiffuse(normal, StrutRenderSystemAccessor.struts$getShaderLightDirections()[0], StrutRenderSystemAccessor.struts$getShaderLightDirections()[1]);
-    }
-
-    // Adapted from minecraft:shaders/include/light.glsl (and subsequently stolen from ShadeSeparatingSuperByteBuffer because these girders refuse to shade)
-    private static float calculateDiffuse(final Vector3fc normal, final Vector3fc lightDir0, final Vector3fc lightDir1) {
-        final float light0 = Math.max(0.0f, lightDir0.dot(normal));
-        final float light1 = Math.max(0.0f, lightDir1.dot(normal));
-        return Math.min(1.0f, (light0 + light1) * 0.6f + 0.4f);
+        return StrutDiffuseHelper.calculateDiffuse(normal);
     }
 
 }
