@@ -10,3 +10,7 @@
 
 - Changed voxel shape resolution from 2 to 4. Improves experience while walking up the struts, but unfortunately makes
   the struts feel jumpier.
+
+# 1.21.1-1.1.1
+
+- Fixed flywheel render lighting
