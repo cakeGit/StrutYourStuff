@@ -13,4 +13,8 @@ public record CableStrutInfo(float sag, float tangentDotThreshold, float minStep
     public CableStrutInfo(final float sag) {
         this(sag, 0.995f, 0.5f, 64);
     }
+
+    public CableStrutInfo withZeroSag() {
+        return new CableStrutInfo(0, this.tangentDotThreshold(), this.minStep(), this.maxSegments());
+    }
 }

@@ -4,14 +4,19 @@ import com.cake.struts.content.CableStrutInfo;
 import com.cake.struts.content.StrutModelType;
 import com.cake.struts.content.connection.GirderConnectionNode;
 import com.cake.struts.content.structure.GirderStrutShapedBlock;
+import com.cake.struts.registry.StrutItemTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.*;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -20,6 +25,7 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.material.PushReaction;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -77,6 +83,22 @@ public abstract class StrutBlock extends Block implements SimpleWaterloggedBlock
     @Override
     protected void createBlockStateDefinition(final StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING, WATERLOGGED);
+    }
+
+    @Override
+    protected @NotNull ItemInteractionResult useItemOn(final @NotNull ItemStack stack, final @NotNull BlockState state,
+                                                       final @NotNull Level level, final @NotNull BlockPos pos,
+                                                       final @NotNull Player player, final @NotNull InteractionHand hand,
+                                                       final @NotNull BlockHitResult hitResult) {
+        if (this.cableRenderInfo != null && stack.is(StrutItemTags.WRENCHES) && !player.isShiftKeyDown()) {
+            if (!level.isClientSide && level.getBlockEntity(pos) instanceof final StrutBlockEntity blockEntity) {
+                final boolean tensioned = blockEntity.toggleAllCableTension();
+                final SoundType soundType = state.getSoundType();
+                level.playSound(null, pos, soundType.getPlaceSound(), SoundSource.BLOCKS, 0.5f, tensioned ? 1.5f : 0.8f);
+            }
+            return ItemInteractionResult.SUCCESS;
+        }
+        return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
     }
 
     @Nullable

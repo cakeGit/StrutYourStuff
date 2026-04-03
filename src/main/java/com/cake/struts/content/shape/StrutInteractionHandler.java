@@ -92,10 +92,13 @@ public class StrutInteractionHandler {
                         modelType.voxelShapeResolutionPixels()
                 );
                 final ConnectionKey key = new ConnectionKey(pos, other);
+                final CableStrutInfo effectiveRenderInfo = cableRenderInfo != null && be.isTensioned(conn.relativeOffset())
+                        ? cableRenderInfo.withZeroSag()
+                        : cableRenderInfo;
                 store.put(key, cableRenderInfo != null
                         ? new CableStrutConnectionShape(
                         geom.getFromAttachment(), geom.getToAttachment(),
-                        geom.getHalfX(), geom.getHalfY(), cableRenderInfo
+                        geom.getHalfX(), geom.getHalfY(), effectiveRenderInfo
                 )
                         : new DefaultStrutConnectionShape(
                         geom.getFromAttachment(), geom.getToAttachment(),

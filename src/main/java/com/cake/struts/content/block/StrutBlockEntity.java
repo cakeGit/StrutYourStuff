@@ -45,6 +45,7 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     private final Set<GirderConnectionNode> connections = new HashSet<>();
     private final Set<GirderConnectionNode> registeredConnections = new HashSet<>();
     private final Set<BlockPos> unresolvedLegacyConnections = new HashSet<>();
+    private final Set<BlockPos> tensionedOffsets = new HashSet<>();
     public List<BakedQuad> connectionQuadCache;
 
     public StrutBlockEntity(final BlockEntityType<? extends StrutBlockEntity> type, final BlockPos pos, final BlockState state) {
@@ -103,6 +104,7 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
             }
         }
         if (toRemove != null && connections.remove(toRemove)) {
+            this.tensionedOffsets.remove(relative);
             if (level != null && !level.isClientSide && registeredConnections.remove(toRemove)) {
                 GirderStrutStructureShapes.unregisterConnection(level, getBlockPos(), pos);
             }
@@ -118,8 +120,52 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
         return Set.copyOf(connections);
     }
 
+    public boolean isTensioned(final BlockPos relativeOffset) {
+        return this.tensionedOffsets.contains(relativeOffset);
+    }
+
+    public boolean toggleAllCableTension() {
+        final boolean shouldTension = this.hasAnyUntensionedConnection();
+
+        for (final GirderConnectionNode conn : this.connections) {
+            this.setTensioned(conn.relativeOffset(), shouldTension);
+            this.syncTensionToPeer(conn, shouldTension);
+        }
+
+        this.notifyModelChange();
+        return shouldTension;
+    }
+
+    private boolean hasAnyUntensionedConnection() {
+        for (final GirderConnectionNode conn : this.connections) {
+            if (!this.tensionedOffsets.contains(conn.relativeOffset())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void setTensioned(final BlockPos relativeOffset, final boolean tensioned) {
+        if (tensioned) {
+            this.tensionedOffsets.add(relativeOffset);
+        } else {
+            this.tensionedOffsets.remove(relativeOffset);
+        }
+    }
+
+    private void syncTensionToPeer(final GirderConnectionNode conn, final boolean shouldTension) {
+        if (this.level == null) {
+            return;
+        }
+        final BlockPos peerPos = conn.absoluteFrom(this.worldPosition);
+        if (this.level.getBlockEntity(peerPos) instanceof final StrutBlockEntity peer) {
+            peer.setTensioned(this.worldPosition.subtract(peerPos), shouldTension);
+            peer.notifyModelChange();
+        }
+    }
+
     public int getConnectionHash() {
-        return connections.hashCode();
+        return 31 * this.connections.hashCode() + this.tensionedOffsets.hashCode();
     }
 
     private void notifyModelChange() {
@@ -153,6 +199,17 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
             list.add(ct);
         }
         tag.put("Connections", list);
+        if (!this.tensionedOffsets.isEmpty()) {
+            final ListTag tensionList = new ListTag();
+            for (final BlockPos offset : this.tensionedOffsets) {
+                final CompoundTag ct = new CompoundTag();
+                ct.putInt("X", offset.getX());
+                ct.putInt("Y", offset.getY());
+                ct.putInt("Z", offset.getZ());
+                tensionList.add(ct);
+            }
+            tag.put("TensionedConnections", tensionList);
+        }
     }
 
     @Override
@@ -171,6 +228,15 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
                     } else {
                         unresolvedLegacyConnections.add(offset);
                     }
+                }
+            }
+        }
+        this.tensionedOffsets.clear();
+        if (tag.contains("TensionedConnections", Tag.TAG_LIST)) {
+            final ListTag tensionList = tag.getList("TensionedConnections", Tag.TAG_COMPOUND);
+            for (final Tag t : tensionList) {
+                if (t instanceof final CompoundTag ct) {
+                    this.tensionedOffsets.add(new BlockPos(ct.getInt("X"), ct.getInt("Y"), ct.getInt("Z")));
                 }
             }
         }

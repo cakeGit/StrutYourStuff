@@ -134,13 +134,16 @@ public class StrutModelBuilder extends BakedModelWrapper<BakedModel> {
                 final Vec3 endLocal = otherSurface.subtract(blockOrigin);
                 final Vec3 planePointLocal = facePoint.subtract(blockOrigin);
 
+                final CableStrutInfo effectiveRenderInfo = cableRenderInfo != null && blockEntity.isTensioned(data.relativeOffset())
+                        ? cableRenderInfo.withZeroSag()
+                        : cableRenderInfo;
                 connections.add(new GirderConnection(
                         startLocal,
                         endLocal,
                         renderLength,
                         planePointLocal,
                         Vec3.atLowerCornerOf(facing.getNormal()),
-                        cableRenderInfo
+                        effectiveRenderInfo
                 ));
             }
 
