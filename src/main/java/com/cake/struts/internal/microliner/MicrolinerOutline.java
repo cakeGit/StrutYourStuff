@@ -9,7 +9,7 @@ import net.minecraft.world.phys.Vec3;
  * "This code is modified and used under MIT licence, full credit goes to the Create / Ponder team."
  */
 public interface MicrolinerOutline {
-    void render(PoseStack poseStack, MultiBufferSource buffer, Vec3 camera, MicrolinerParams params);
+    void render(PoseStack poseStack, MultiBufferSource buffer, Vec3 camera, MicrolinerCoordinateTransform transform, MicrolinerParams params);
 
     /**
      * Equivalent to {@link net.minecraft.client.renderer.LevelRenderer#renderLineBox(VertexConsumer, double, double, double, double, double, double, float, float, float, float)} for just a line.

@@ -7,6 +7,7 @@ import com.cake.struts.content.shape.DefaultStrutConnectionShape;
 import com.cake.struts.content.shape.StrutConnectionShape;
 import com.cake.struts.content.structure.BlockyStrutLineGeometry;
 import com.cake.struts.internal.microliner.Microliner;
+import com.cake.struts.internal.microliner.MicrolinerCoordinateTransform;
 import com.cake.struts.internal.microliner.MicrolinerParams;
 import com.cake.struts.registry.StrutDataComponents;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -89,29 +90,32 @@ public class StrutPlacementEffects {
         final BlockyStrutLineGeometry lineGeometry = new BlockyStrutLineGeometry(fromPos, fromFace, targetPos, targetFace, modelType.shapeSizeXPixels(),
                 modelType.shapeSizeYPixels(), modelType.voxelShapeResolutionPixels());
         final StrutConnectionShape previewShape = resolvePreviewShape(heldItem, lineGeometry);
+        final StrutPreviewRenderTransforms renderTransforms = StrutPreviewRenderTransforms.resolve(level, fromPos, targetPos);
 
-        showAnchorOutline(level, fromPos, fromFace, heldBlock, "from", outlinerColor.x, outlinerColor.y, outlinerColor.z);
-        showAnchorOutline(level, targetPos, targetFace, heldBlock, "to", outlinerColor.x, outlinerColor.y, outlinerColor.z);
-        showConnectionShape(previewShape, outlinerColor.x, outlinerColor.y, outlinerColor.z);
+        showAnchorOutline(level, fromPos, fromFace, heldBlock, "from", renderTransforms.from(), outlinerColor.x, outlinerColor.y, outlinerColor.z);
+        showAnchorOutline(level, targetPos, targetFace, heldBlock, "to", renderTransforms.to(), outlinerColor.x, outlinerColor.y, outlinerColor.z);
+        showConnectionShape(previewShape, renderTransforms.connection(), outlinerColor.x, outlinerColor.y, outlinerColor.z);
     }
 
     private static void showAnchorOutline(final ClientLevel level, final BlockPos targetPos, final Direction targetFace,
-                                           final StrutBlock heldBlock, final String id, final float r, final float g, final float b) {
+                                           final StrutBlock heldBlock, final String id, final MicrolinerCoordinateTransform transform,
+                                           final float r, final float g, final float b) {
         final BlockState state = level.getBlockState(targetPos);
         final AABB localBounds = (state.getBlock() instanceof StrutBlock
                 ? state.getShape(level, targetPos)
                 : heldBlock.defaultBlockState().setValue(StrutBlock.FACING, targetFace).getShape(level, targetPos)
         ).bounds();
         final AABB worldBounds = localBounds.move(targetPos.getX(), targetPos.getY(), targetPos.getZ());
-        Microliner.get().showAABB("strut_preview_anchor_" + id, worldBounds, new MicrolinerParams(1 / 16f, r, g, b, 1f, 2));
+        Microliner.get().showAABB("strut_preview_anchor_" + id, worldBounds, transform, new MicrolinerParams(1 / 16f, r, g, b, 1f, 2));
     }
 
-    private static void showConnectionShape(final StrutConnectionShape shape, final float r, final float g, final float b) {
+    private static void showConnectionShape(final StrutConnectionShape shape, final MicrolinerCoordinateTransform transform,
+                                            final float r, final float g, final float b) {
         final int color = packColor(r, g, b, 1f);
-        Microliner.get().showOutline("strut_preview_shape", (poseStack, buffer, camera, params) -> {
+        Microliner.get().showOutline("strut_preview_shape", (poseStack, buffer, camera, entryTransform, params) -> {
             final VertexConsumer consumer = buffer.getBuffer(RenderType.lines());
-            shape.drawOutline(poseStack, consumer, camera, color);
-        }, new MicrolinerParams(1 / 16f, r, g, b, 1f, 2));
+            shape.drawOutline(poseStack, consumer, camera, color, entryTransform);
+        }, transform, new MicrolinerParams(1 / 16f, r, g, b, 1f, 2));
     }
 
     private static StrutConnectionShape resolvePreviewShape(final ItemStack heldItem, final BlockyStrutLineGeometry lineGeometry) {

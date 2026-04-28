@@ -21,6 +21,17 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 repositories {
     maven { url = 'https://maven.neoforged.net/releases' }
     maven { url = 'https://maven.createmod.net' }
+    exclusiveContent {
+        forRepository {
+            maven {
+                url = "https://maven.ryanhcode.dev/releases"
+                name = "RyanHCode Maven"
+            }
+        }
+        filter {
+            includeGroup("dev.ryanhcode.sable-companion")
+        }
+    }
     maven {
         name = 'azmod-maven'
         url = uri("https://maven.azmod.net/${findProperty('azmodRepository') ?: 'releases'}")
@@ -37,8 +48,12 @@ configurations {
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
-    compileOnly "com.simibubi.create:create-${minecraft_version}:+"
     compileOnly "dev.engine-room.flywheel:flywheel-neoforge-api-${minecraft_version}:${flywheel_version}"
+    jarJar(api("dev.ryanhcode.sable-companion:sable-companion-common-${project.minecraft_version}:[${project.sable_companion_version},)")) {
+        version {
+            prefer project.sable_companion_version
+        }
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {

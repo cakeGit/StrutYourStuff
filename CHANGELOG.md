@@ -14,3 +14,7 @@
 # 1.21.1-1.1.1
 
 - Fixed flywheel render lighting
+
+# 1.21.1-1.2.0
+
+- Improved sable behaviour

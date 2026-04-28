@@ -12,13 +12,13 @@ import net.minecraft.world.phys.Vec3;
 public record MicrolinerLineOutline(Vec3 from, Vec3 to) implements MicrolinerOutline {
 
     @Override
-    public void render(final PoseStack poseStack, final MultiBufferSource buffer, final Vec3 camera, final MicrolinerParams params) {
+    public void render(final PoseStack poseStack, final MultiBufferSource buffer, final Vec3 camera, final MicrolinerCoordinateTransform transform, final MicrolinerParams params) {
         final VertexConsumer consumer = buffer.getBuffer(RenderType.lines());
         MicrolinerOutline.renderLine(
                 poseStack,
                 consumer,
-                from.subtract(camera),
-                to.subtract(camera),
+                transform.transform(this.from()).subtract(camera),
+                transform.transform(this.to()).subtract(camera),
                 params.r(),
                 params.g(),
                 params.b(),

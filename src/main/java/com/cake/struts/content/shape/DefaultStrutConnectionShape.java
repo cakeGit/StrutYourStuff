@@ -1,5 +1,6 @@
 package com.cake.struts.content.shape;
 
+import com.cake.struts.internal.microliner.MicrolinerCoordinateTransform;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.core.BlockPos;
@@ -99,18 +100,13 @@ public class DefaultStrutConnectionShape implements StrutConnectionShape {
     }
 
     @Override
-    public void drawOutline(final PoseStack ms, final VertexConsumer vb, final Vec3 camera) {
-        drawOutline(ms, vb, camera, 0x66000000);
-    }
-
-    @Override
-    public void drawOutline(final PoseStack ms, final VertexConsumer vb, final Vec3 camera, final int color) {
-        if (!hasGeometry) {
+    public void drawOutline(final PoseStack ms, final VertexConsumer vb, final Vec3 camera, final int color, final MicrolinerCoordinateTransform transform) {
+        if (!this.hasGeometry) {
             return;
         }
 
-        for (final OutlineEdge edge : outlineEdges) {
-            line(vb, ms, edge.from().subtract(camera), edge.to().subtract(camera), color);
+        for (final OutlineEdge edge : this.outlineEdges) {
+            line(vb, ms, transform.transform(edge.from()).subtract(camera), transform.transform(edge.to()).subtract(camera), color);
         }
     }
 

@@ -21,20 +21,28 @@ public class Microliner {
     }
 
     public void showAABB(final String id, final AABB box, final MicrolinerParams params) {
-        entries.put(id, new MicrolinerEntry(new MicrolinerAABBOutline(box), params));
+        this.showAABB(id, box, MicrolinerCoordinateTransform.identity(), params);
+    }
+
+    public void showAABB(final String id, final AABB box, final MicrolinerCoordinateTransform transform, final MicrolinerParams params) {
+        this.entries.put(id, new MicrolinerEntry(new MicrolinerAABBOutline(box), transform, params));
     }
 
     public void showOutline(final String id, final MicrolinerOutline outline, final MicrolinerParams params) {
-        entries.put(id, new MicrolinerEntry(outline, params));
+        this.showOutline(id, outline, MicrolinerCoordinateTransform.identity(), params);
+    }
+
+    public void showOutline(final String id, final MicrolinerOutline outline, final MicrolinerCoordinateTransform transform, final MicrolinerParams params) {
+        this.entries.put(id, new MicrolinerEntry(outline, transform, params));
     }
 
     public void tick() {
-        entries.entrySet().removeIf(entry -> !entry.getValue().tick());
+        this.entries.entrySet().removeIf(entry -> !entry.getValue().tick());
     }
 
     public void render(final PoseStack poseStack, final MultiBufferSource buffer, final Vec3 camera) {
-        for (final MicrolinerEntry entry : entries.values()) {
-            entry.outline().render(poseStack, buffer, camera, entry.params());
+        for (final MicrolinerEntry entry : this.entries.values()) {
+            entry.outline().render(poseStack, buffer, camera, entry.transform(), entry.params());
         }
     }
 }

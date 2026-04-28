@@ -2,6 +2,7 @@ package com.cake.struts.content.shape;
 
 import com.cake.struts.content.CableStrutInfo;
 import com.cake.struts.content.CableStrutModelManipulator;
+import com.cake.struts.internal.microliner.MicrolinerCoordinateTransform;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.util.Mth;
@@ -129,51 +130,30 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
     }
 
     @Override
-    public void drawOutline(final PoseStack ms, final VertexConsumer vb, final Vec3 camera) {
-        drawOutline(ms, vb, camera, 0x66000000);
-    }
-
-    public void drawOutline(final PoseStack ms, final VertexConsumer vb, final Vec3 camera, final int color) {
-        if (segmentCount <= 0) {
+    public void drawOutline(final PoseStack ms, final VertexConsumer vb, final Vec3 camera, final int color, final MicrolinerCoordinateTransform transform) {
+        if (this.segmentCount <= 0) {
             return;
         }
 
-        final float hw = (float) halfWidth;
-        final float hh = (float) halfHeight;
+        final float hw = (float) this.halfWidth;
+        final float hh = (float) this.halfHeight;
 
-        for (int segmentIndex = 0; segmentIndex < segmentCount; segmentIndex++) {
+        for (int segmentIndex = 0; segmentIndex < this.segmentCount; segmentIndex++) {
             final int endIndex = segmentIndex + 1;
 
-            final Vec3 start = points.get(segmentIndex);
-            final Vec3 end = points.get(endIndex);
+            final Vec3 start = this.points.get(segmentIndex);
+            final Vec3 end = this.points.get(endIndex);
 
-            final List<Vec3> startCorners = getCorners(start, uAtVertex[segmentIndex], vAtVertex[segmentIndex], hw, hh);
+            final List<Vec3> startCorners = getCorners(start, this.uAtVertex[segmentIndex], this.vAtVertex[segmentIndex], hw, hh);
             final List<Vec3> endCorners = getCornersInClosestOrder(
-                    getCorners(end, uAtVertex[endIndex], vAtVertex[endIndex], hw, hh),
+                    getCorners(end, this.uAtVertex[endIndex], this.vAtVertex[endIndex], hw, hh),
                     startCorners
             );
 
             for (int cornerIndex = 0; cornerIndex < 4; cornerIndex++) {
-                line(vb, ms, startCorners.get(cornerIndex).subtract(camera), endCorners.get(cornerIndex).subtract(camera), color);
+                line(vb, ms, transform.transform(startCorners.get(cornerIndex)).subtract(camera), transform.transform(endCorners.get(cornerIndex)).subtract(camera), color);
             }
-
-//            drawRing(vb, ms,
-//                    startCorners.get(0).subtract(camera),
-//                    startCorners.get(1).subtract(camera),
-//                    startCorners.get(2).subtract(camera),
-//                    startCorners.get(3).subtract(camera),
-//                    color);
         }
-
-//        final int lastIndex = points.size() - 1;
-//        final Vec3 end = points.get(lastIndex);
-//        final List<Vec3> endCorners = getCorners(end, uAtVertex[lastIndex], vAtVertex[lastIndex], hw, hh);
-//        drawRing(vb, ms,
-//                endCorners.get(0).subtract(camera),
-//                endCorners.get(1).subtract(camera),
-//                endCorners.get(2).subtract(camera),
-//                endCorners.get(3).subtract(camera),
-//                color);
     }
 
     private static AABB computeBounds(final List<Vec3> path, final double inflate) {

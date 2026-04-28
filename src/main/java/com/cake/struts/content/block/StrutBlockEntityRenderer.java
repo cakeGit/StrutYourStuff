@@ -1,6 +1,7 @@
 package com.cake.struts.content.block;
 
 import com.cake.struts.compat.flywheel.StrutsFlywheelCompatLoader;
+import com.cake.struts.compat.sable.SableCompat;
 import com.cake.struts.content.StrutDiffuseHelper;
 import com.cake.struts.content.StrutModelBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -36,7 +37,8 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
             return;
         }
 
-        if (StrutsFlywheelCompatLoader.supportsVisualization(blockEntity.getLevel())) {
+        if (StrutsFlywheelCompatLoader.supportsVisualization(blockEntity.getLevel())
+                && !SableCompat.isInSubLevel(blockEntity.getLevel(), blockEntity.getBlockPos())) {
             return;
         }
 
