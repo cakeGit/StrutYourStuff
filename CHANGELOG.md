@@ -18,3 +18,7 @@
 # 1.21.1-1.2.0
 
 - Improved sable behaviour
+
+# 1.21.1-1.2.1
+
+- Fix strut double rendering

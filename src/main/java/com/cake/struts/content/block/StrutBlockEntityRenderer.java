@@ -1,7 +1,6 @@
 package com.cake.struts.content.block;
 
 import com.cake.struts.compat.flywheel.StrutsFlywheelCompatLoader;
-import com.cake.struts.compat.sable.SableCompat;
 import com.cake.struts.content.StrutDiffuseHelper;
 import com.cake.struts.content.StrutModelBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -32,13 +31,17 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
     }
 
     @Override
-    public void render(final StrutBlockEntity blockEntity, final float partialTick, final @NotNull PoseStack poseStack, final @NotNull MultiBufferSource buffer, final int packedLight, final int packedOverlay) {
+    public void render(final StrutBlockEntity blockEntity,
+                       final float partialTick,
+                       final @NotNull PoseStack poseStack,
+                       final @NotNull MultiBufferSource buffer,
+                       final int packedLight,
+                       final int packedOverlay) {
         if (!(blockEntity.getBlockState().getBlock() instanceof final StrutBlock strutBlock) || blockEntity.getLevel() == null) {
             return;
         }
 
-        if (StrutsFlywheelCompatLoader.supportsVisualization(blockEntity.getLevel())
-                && !SableCompat.isInSubLevel(blockEntity.getLevel(), blockEntity.getBlockPos())) {
+        if (StrutsFlywheelCompatLoader.supportsVisualization(blockEntity.getLevel())) {
             return;
         }
 
@@ -48,7 +51,8 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
                     blockEntity.getBlockPos(),
                     blockEntity.getBlockState(),
                     blockEntity,
-                    strutBlock.getModelType());
+                    strutBlock.getModelType()
+            );
         }
 
         final List<BakedQuad> quads = blockEntity.connectionQuadCache;
@@ -60,7 +64,19 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
         final Function<Vector3f, Integer> lighter = blockEntity.createLighter();
 
         for (final BakedQuad quad : quads) {
-            putBulkLitData(consumer, poseStack.last(), quad, new float[]{1.0F, 1.0F, 1.0F, 1.0F}, 1f, 1f, 1f, 1f, lighter, packedOverlay, true);
+            putBulkLitData(
+                    consumer,
+                    poseStack.last(),
+                    quad,
+                    new float[]{1.0F, 1.0F, 1.0F, 1.0F},
+                    1f,
+                    1f,
+                    1f,
+                    1f,
+                    lighter,
+                    packedOverlay,
+                    true
+            );
         }
     }
 
@@ -89,7 +105,12 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
         final int[] vertices = quads.getVertices();
         final Vec3i vec3i = quads.getDirection().getNormal();
         final Matrix4f matrix4f = p_85988_.pose();
-        final Vector3f vector3f = p_85988_.transformNormal((float) vec3i.getX(), (float) vec3i.getY(), (float) vec3i.getZ(), new Vector3f());
+        final Vector3f vector3f = p_85988_.transformNormal(
+                (float) vec3i.getX(),
+                (float) vec3i.getY(),
+                (float) vec3i.getZ(),
+                new Vector3f()
+        );
         final int i = 8;
         final int j = vertices.length / 8;
         final int k = (int) (p_331416_ * 255.0F);
@@ -128,7 +149,19 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
                 final int j1 = consumer.applyBakedLighting(lighter.apply(worldPos), bytebuffer);
                 final Vector3f vector3f1 = matrix4f.transformPosition(worldPos);
                 consumer.applyBakedNormals(vector3f, bytebuffer, p_85988_.normal());
-                consumer.addVertex(vector3f1.x(), vector3f1.y(), vector3f1.z(), i1, f10, f9, p_85993_, j1, vector3f.x(), vector3f.y(), vector3f.z());
+                consumer.addVertex(
+                        vector3f1.x(),
+                        vector3f1.y(),
+                        vector3f1.z(),
+                        i1,
+                        f10,
+                        f9,
+                        p_85993_,
+                        j1,
+                        vector3f.x(),
+                        vector3f.y(),
+                        vector3f.z()
+                );
             }
         }
     }
