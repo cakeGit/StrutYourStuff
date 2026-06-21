@@ -1,7 +1,7 @@
 package com.cake.struts.content.block;
 
 import com.cake.struts.compat.flywheel.StrutsFlywheelCompatLoader;
-import com.cake.struts.content.StrutDiffuseHelper;
+import com.cake.struts.content.DiffuseHelper;
 import com.cake.struts.content.StrutModelBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -167,7 +167,7 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
     }
 
     private static float calculateDiffuse(final Vector3f normal) {
-        return StrutDiffuseHelper.calculateDiffuse(normal);
+        return DiffuseHelper.calculateDiffuse(normal);
     }
 
 }

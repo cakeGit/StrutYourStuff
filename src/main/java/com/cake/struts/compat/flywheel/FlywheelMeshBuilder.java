@@ -1,6 +1,6 @@
 package com.cake.struts.compat.flywheel;
 
-import com.cake.struts.content.StrutDiffuseHelper;
+import com.cake.struts.content.DiffuseHelper;
 import com.cake.struts.internal.util.BakedQuadHelper;
 import dev.engine_room.flywheel.api.material.Material;
 import dev.engine_room.flywheel.api.model.Model;
@@ -33,7 +33,7 @@ public class FlywheelMeshBuilder {
         for (final BakedQuad quad : quads) {
             final int[] data = quad.getVertices();
             final Vec3i faceNormal = quad.getDirection().getNormal();
-            final float diffuse = StrutDiffuseHelper.calculateWorldSpaceDiffuse(
+            final float diffuse = DiffuseHelper.calculateWorldSpaceDiffuse(
                     new Vector3f(faceNormal.getX(), faceNormal.getY(), faceNormal.getZ()), constantAmbientLight);
 
             for (int v = 0; v < 4; v++) {

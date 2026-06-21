@@ -27,3 +27,7 @@
 # 1.21.1-1.2.2
 
 - Fix strut rotations with create schematics and transforms
+
+# 1.21.1-1.2.3
+
+- Improve sable behavior

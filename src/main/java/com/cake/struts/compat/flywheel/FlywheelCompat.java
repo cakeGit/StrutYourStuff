@@ -1,6 +1,5 @@
 package com.cake.struts.compat.flywheel;
 
-import com.cake.struts.compat.sable.SableCompat;
 import com.cake.struts.content.block.StrutBlockEntity;
 import dev.engine_room.flywheel.api.visualization.VisualizationManager;
 import dev.engine_room.flywheel.lib.visualization.SimpleBlockEntityVisualizer;
@@ -23,10 +22,7 @@ public class FlywheelCompat {
 
     private boolean shouldSkipVanillaRender(final StrutBlockEntity blockEntity) {
         final Level level = blockEntity.getLevel();
-        if (!this.supportsVisualization(level)) {
-            return false;
-        }
-        return !SableCompat.isInSubLevel(level, blockEntity.getBlockPos());
+        return this.supportsVisualization(level);
     }
 
     public boolean supportsVisualization(final @Nullable LevelAccessor level) {

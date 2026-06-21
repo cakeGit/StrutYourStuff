@@ -2,43 +2,96 @@ package com.cake.struts.internal.microliner;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import dev.ryanhcode.sable.companion.math.Pose3dc;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * "This code is modified and used under MIT licence, full credit goes to the Create / Ponder team."
+ * Bastardized code under MIT liscence, full credit goes to the Create team
  */
 public record MicrolinerAABBOutline(AABB box) implements MicrolinerOutline {
 
     @Override
-    public void render(final PoseStack poseStack, final MultiBufferSource buffer, final Vec3 camera, final MicrolinerCoordinateTransform transform, final MicrolinerParams params) {
+    public void render(final PoseStack poseStack,
+                       final Pose3dc subLevelRenderPose,
+                       final MultiBufferSource buffer,
+                       final Vec3 camera,
+                       final MicrolinerParams params) {
         final VertexConsumer consumer = buffer.getBuffer(RenderType.lines());
-        final Vec3 minMinMin = transform.transform(new Vec3(this.box().minX, this.box().minY, this.box().minZ)).subtract(camera);
-        final Vec3 minMinMax = transform.transform(new Vec3(this.box().minX, this.box().minY, this.box().maxZ)).subtract(camera);
-        final Vec3 minMaxMin = transform.transform(new Vec3(this.box().minX, this.box().maxY, this.box().minZ)).subtract(camera);
-        final Vec3 minMaxMax = transform.transform(new Vec3(this.box().minX, this.box().maxY, this.box().maxZ)).subtract(camera);
-        final Vec3 maxMinMin = transform.transform(new Vec3(this.box().maxX, this.box().minY, this.box().minZ)).subtract(camera);
-        final Vec3 maxMinMax = transform.transform(new Vec3(this.box().maxX, this.box().minY, this.box().maxZ)).subtract(camera);
-        final Vec3 maxMaxMin = transform.transform(new Vec3(this.box().maxX, this.box().maxY, this.box().minZ)).subtract(camera);
-        final Vec3 maxMaxMax = transform.transform(new Vec3(this.box().maxX, this.box().maxY, this.box().maxZ)).subtract(camera);
+        final Vec3 minMinMin = new Vec3(
+                this.box().minX,
+                this.box().minY,
+                this.box().minZ
+        );
+        final Vec3 minMinMax = new Vec3(
+                this.box().minX,
+                this.box().minY,
+                this.box().maxZ
+        );
+        final Vec3 minMaxMin = new Vec3(
+                this.box().minX,
+                this.box().maxY,
+                this.box().minZ
+        );
+        final Vec3 minMaxMax = new Vec3(
+                this.box().minX,
+                this.box().maxY,
+                this.box().maxZ
+        );
+        final Vec3 maxMinMin = new Vec3(
+                this.box().maxX,
+                this.box().minY,
+                this.box().minZ
+        );
+        final Vec3 maxMinMax = new Vec3(
+                this.box().maxX,
+                this.box().minY,
+                this.box().maxZ
+        );
+        final Vec3 maxMaxMin = new Vec3(
+                this.box().maxX,
+                this.box().maxY,
+                this.box().minZ
+        );
+        final Vec3 maxMaxMax = new Vec3(
+                this.box().maxX,
+                this.box().maxY,
+                this.box().maxZ
+        );
 
-        renderEdge(poseStack, consumer, minMinMin, minMinMax, params);
-        renderEdge(poseStack, consumer, minMinMax, minMaxMax, params);
-        renderEdge(poseStack, consumer, minMaxMax, minMaxMin, params);
-        renderEdge(poseStack, consumer, minMaxMin, minMinMin, params);
-        renderEdge(poseStack, consumer, maxMinMin, maxMinMax, params);
-        renderEdge(poseStack, consumer, maxMinMax, maxMaxMax, params);
-        renderEdge(poseStack, consumer, maxMaxMax, maxMaxMin, params);
-        renderEdge(poseStack, consumer, maxMaxMin, maxMinMin, params);
-        renderEdge(poseStack, consumer, minMinMin, maxMinMin, params);
-        renderEdge(poseStack, consumer, minMinMax, maxMinMax, params);
-        renderEdge(poseStack, consumer, minMaxMin, maxMaxMin, params);
-        renderEdge(poseStack, consumer, minMaxMax, maxMaxMax, params);
+        renderEdge(poseStack, subLevelRenderPose, consumer, minMinMin, minMinMax, params, camera);
+        renderEdge(poseStack, subLevelRenderPose, consumer, minMinMax, minMaxMax, params, camera);
+        renderEdge(poseStack, subLevelRenderPose, consumer, minMaxMax, minMaxMin, params, camera);
+        renderEdge(poseStack, subLevelRenderPose, consumer, minMaxMin, minMinMin, params, camera);
+        renderEdge(poseStack, subLevelRenderPose, consumer, maxMinMin, maxMinMax, params, camera);
+        renderEdge(poseStack, subLevelRenderPose, consumer, maxMinMax, maxMaxMax, params, camera);
+        renderEdge(poseStack, subLevelRenderPose, consumer, maxMaxMax, maxMaxMin, params, camera);
+        renderEdge(poseStack, subLevelRenderPose, consumer, maxMaxMin, maxMinMin, params, camera);
+        renderEdge(poseStack, subLevelRenderPose, consumer, minMinMin, maxMinMin, params, camera);
+        renderEdge(poseStack, subLevelRenderPose, consumer, minMinMax, maxMinMax, params, camera);
+        renderEdge(poseStack, subLevelRenderPose, consumer, minMaxMin, maxMaxMin, params, camera);
+        renderEdge(poseStack, subLevelRenderPose, consumer, minMaxMax, maxMaxMax, params, camera);
     }
 
-    private static void renderEdge(final PoseStack poseStack, final VertexConsumer consumer, final Vec3 from, final Vec3 to, final MicrolinerParams params) {
-        MicrolinerOutline.renderLine(poseStack, consumer, from, to, params.r(), params.g(), params.b(), params.a());
+    private static void renderEdge(final PoseStack poseStack,
+                                   final Pose3dc subLevelRenderPose, final VertexConsumer consumer,
+                                   final Vec3 from,
+                                   final Vec3 to,
+                                   final MicrolinerParams params,
+                                   final Vec3 camera) {
+        MicrolinerOutline.renderLine(
+                poseStack,
+                subLevelRenderPose,
+                consumer,
+                from,
+                to,
+                camera,
+                params.r(),
+                params.g(),
+                params.b(),
+                params.a()
+        );
     }
 }

@@ -2,9 +2,11 @@ package com.cake.struts.content.shape;
 
 import com.cake.struts.content.CableStrutInfo;
 import com.cake.struts.content.CableStrutModelManipulator;
-import com.cake.struts.internal.microliner.MicrolinerCoordinateTransform;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import dev.ryanhcode.sable.companion.ClientSubLevelAccess;
+import dev.ryanhcode.sable.companion.math.Pose3dc;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -47,7 +49,7 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
         this.uAtVertex = new Vec3[this.points.size()];
         this.vAtVertex = new Vec3[this.points.size()];
         this.bounds = computeBounds(this.points, Math.max(this.halfWidth, this.halfHeight));
-        buildFrames();
+        this.buildFrames();
     }
 
     private static List<Vec3> samplePoints(final Vec3 from, final Vec3 to, final CableStrutInfo info) {
@@ -61,7 +63,7 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
     private static List<Vec3> sanitizePoints(final List<Vec3> rawPoints) {
         final List<Vec3> cleaned = new ArrayList<>(rawPoints.size());
         for (final Vec3 point : rawPoints) {
-            if (cleaned.isEmpty() || cleaned.get(cleaned.size() - 1).distanceToSqr(point) > MIN_LENGTH_SQR) {
+            if (cleaned.isEmpty() || cleaned.getLast().distanceToSqr(point) > MIN_LENGTH_SQR) {
                 cleaned.add(point);
             }
         }
@@ -70,7 +72,7 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
             cleaned.add(new Vec3(0.0, 0.0, 0.0));
         }
         if (cleaned.size() == 1) {
-            cleaned.add(cleaned.get(0));
+            cleaned.add(cleaned.getFirst());
         }
         return List.copyOf(cleaned);
     }
@@ -82,11 +84,11 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
     @Nullable
     @Override
     public Vec3 intersect(final Vec3 rayFrom, final Vec3 rayTo) {
-        if (segmentCount <= 0) {
+        if (this.segmentCount <= 0) {
             return null;
         }
 
-        if (!bounds.contains(rayFrom) && bounds.clip(rayFrom, rayTo).isEmpty()) {
+        if (!this.bounds.contains(rayFrom) && this.bounds.clip(rayFrom, rayTo).isEmpty()) {
             return null;
         }
 
@@ -98,9 +100,9 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
         double bestDistanceSq = Double.POSITIVE_INFINITY;
         Vec3 bestHit = null;
 
-        for (int segmentIndex = 0; segmentIndex < segmentCount; segmentIndex++) {
-            final Vec3 start = points.get(segmentIndex);
-            final Vec3 end = points.get(segmentIndex + 1);
+        for (int segmentIndex = 0; segmentIndex < this.segmentCount; segmentIndex++) {
+            final Vec3 start = this.points.get(segmentIndex);
+            final Vec3 end = this.points.get(segmentIndex + 1);
             final Vec3 segment = end.subtract(start);
             final double segmentLength = segment.length();
             if (segmentLength * segmentLength < MIN_LENGTH_SQR) {
@@ -108,12 +110,14 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
             }
 
             final Vec3 segmentTangent = segment.scale(1.0 / segmentLength);
-            final Frame frame = frameForSegment(segmentIndex, segmentIndex + 1, 0.5, segmentTangent);
+            final Frame frame = this.frameForSegment(segmentIndex, segmentIndex + 1, 0.5, segmentTangent);
             final Vec3 segmentCenter = start.add(segment.scale(0.5));
-            final double halfLength = segmentLength * 0.5 + getTangentExtension();
+            final double halfLength = segmentLength * 0.5 + this.getTangentExtension();
 
-            final double t = intersectRayWithObb(rayFrom, rayDir, segmentCenter, segmentTangent, frame.u, frame.v,
-                    halfLength, halfWidth, halfHeight);
+            final double t = intersectRayWithObb(
+                    rayFrom, rayDir, segmentCenter, segmentTangent, frame.u, frame.v,
+                    halfLength, this.halfWidth, this.halfHeight
+            );
             if (Double.isNaN(t)) {
                 continue;
             }
@@ -130,7 +134,8 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
     }
 
     @Override
-    public void drawOutline(final PoseStack ms, final VertexConsumer vb, final Vec3 camera, final int color, final MicrolinerCoordinateTransform transform) {
+    public void drawOutline(final PoseStack ms, final VertexConsumer vb, final Vec3 camera, final int color,
+                            final ClientSubLevelAccess containingSubLevel) {
         if (this.segmentCount <= 0) {
             return;
         }
@@ -138,26 +143,49 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
         final float hw = (float) this.halfWidth;
         final float hh = (float) this.halfHeight;
 
+        final Pose3dc renderPose = containingSubLevel != null ? containingSubLevel.renderPose() : null;
+
         for (int segmentIndex = 0; segmentIndex < this.segmentCount; segmentIndex++) {
             final int endIndex = segmentIndex + 1;
 
             final Vec3 start = this.points.get(segmentIndex);
             final Vec3 end = this.points.get(endIndex);
 
-            final List<Vec3> startCorners = getCorners(start, this.uAtVertex[segmentIndex], this.vAtVertex[segmentIndex], hw, hh);
+            final List<Vec3> startCorners = getCorners(
+                    start,
+                    this.uAtVertex[segmentIndex],
+                    this.vAtVertex[segmentIndex],
+                    hw,
+                    hh
+            );
             final List<Vec3> endCorners = getCornersInClosestOrder(
                     getCorners(end, this.uAtVertex[endIndex], this.vAtVertex[endIndex], hw, hh),
                     startCorners
             );
 
             for (int cornerIndex = 0; cornerIndex < 4; cornerIndex++) {
-                line(vb, ms, transform.transform(startCorners.get(cornerIndex)).subtract(camera), transform.transform(endCorners.get(cornerIndex)).subtract(camera), color);
+                final Vec3 from = renderPose != null ? renderPose.transformPosition(startCorners.get(cornerIndex)) : startCorners.get(
+                        cornerIndex);
+                final Vec3 to = renderPose != null ? renderPose.transformPosition(endCorners.get(cornerIndex)) : endCorners.get(
+                        cornerIndex);
+                line(
+                        vb,
+                        ms,
+                        from.subtract(camera),
+                        to.subtract(camera),
+                        color
+                );
             }
         }
     }
 
+    @Override
+    public BlockPos getSubLevelReferencePosition() {
+        return BlockPos.containing(this.points.getFirst());
+    }
+
     private static AABB computeBounds(final List<Vec3> path, final double inflate) {
-        AABB box = new AABB(path.get(0), path.get(0)).inflate(inflate);
+        AABB box = new AABB(path.getFirst(), path.getFirst()).inflate(inflate);
         for (int i = 1; i < path.size(); i++) {
             box = box.minmax(new AABB(path.get(i), path.get(i)).inflate(inflate));
         }
@@ -217,7 +245,8 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
         return corners;
     }
 
-    private static List<Vec3> getCornersInClosestOrder(final List<Vec3> destinationPoints, final List<Vec3> sourcePoints) {
+    private static List<Vec3> getCornersInClosestOrder(final List<Vec3> destinationPoints,
+                                                       final List<Vec3> sourcePoints) {
         List<Vec3> best = destinationPoints;
         double bestScore = Double.POSITIVE_INFINITY;
 
@@ -277,32 +306,32 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
     }
 
     private void buildFrames() {
-        if (points.size() < 2) {
+        if (this.points.size() < 2) {
             return;
         }
 
-        final int count = points.size();
+        final int count = this.points.size();
         for (int i = 0; i < count; i++) {
             final Vec3 tangent;
             if (i == 0) {
-                tangent = safeDirection(points.get(1).subtract(points.get(0)));
+                tangent = safeDirection(this.points.get(1).subtract(this.points.get(0)));
             } else if (i == count - 1) {
-                tangent = safeDirection(points.get(count - 1).subtract(points.get(count - 2)));
+                tangent = safeDirection(this.points.get(count - 1).subtract(this.points.get(count - 2)));
             } else {
-                final Vec3 in = safeDirection(points.get(i).subtract(points.get(i - 1)));
-                final Vec3 out = safeDirection(points.get(i + 1).subtract(points.get(i)));
+                final Vec3 in = safeDirection(this.points.get(i).subtract(this.points.get(i - 1)));
+                final Vec3 out = safeDirection(this.points.get(i + 1).subtract(this.points.get(i)));
                 tangent = safeDirection(in.add(out));
             }
-            tangentAtVertex[i] = tangent;
+            this.tangentAtVertex[i] = tangent;
         }
 
         for (int i = 0; i < count; i++) {
-            final Vec3 tangent = tangentAtVertex[i];
+            final Vec3 tangent = this.tangentAtVertex[i];
             final Vec3 u;
             if (i == 0) {
                 u = perpendicularUnit(tangent);
             } else {
-                Vec3 projected = uAtVertex[i - 1].subtract(tangent.scale(uAtVertex[i - 1].dot(tangent)));
+                Vec3 projected = this.uAtVertex[i - 1].subtract(tangent.scale(this.uAtVertex[i - 1].dot(tangent)));
                 if (projected.lengthSqr() < MIN_LENGTH_SQR) {
                     projected = perpendicularUnit(tangent);
                 } else {
@@ -311,8 +340,8 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
                 u = projected;
             }
             final Vec3 v = safeDirection(tangent.cross(u));
-            uAtVertex[i] = u;
-            vAtVertex[i] = v;
+            this.uAtVertex[i] = u;
+            this.vAtVertex[i] = v;
         }
     }
 
@@ -331,8 +360,11 @@ public class CableStrutConnectionShape implements StrutConnectionShape {
         return safeDirection(candidate);
     }
 
-    private Frame frameForSegment(final int startIndex, final int endIndex, final double segT, final Vec3 segmentTangent) {
-        Vec3 u = uAtVertex[startIndex].lerp(uAtVertex[endIndex], segT);
+    private Frame frameForSegment(final int startIndex,
+                                  final int endIndex,
+                                  final double segT,
+                                  final Vec3 segmentTangent) {
+        Vec3 u = this.uAtVertex[startIndex].lerp(this.uAtVertex[endIndex], segT);
         u = u.subtract(segmentTangent.scale(u.dot(segmentTangent)));
         if (u.lengthSqr() < MIN_LENGTH_SQR) {
             u = perpendicularUnit(segmentTangent);

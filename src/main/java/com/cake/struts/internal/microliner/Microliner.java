@@ -1,6 +1,7 @@
 package com.cake.struts.internal.microliner;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import dev.ryanhcode.sable.companion.ClientSubLevelAccess;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -9,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * "This code is modified and used under MIT licence, full credit goes to the Create / Ponder team."
+ * Bastardized code under MIT liscence, full credit goes to the Create team
  */
 public class Microliner {
 
@@ -20,20 +21,15 @@ public class Microliner {
         return INSTANCE;
     }
 
+
     public void showAABB(final String id, final AABB box, final MicrolinerParams params) {
-        this.showAABB(id, box, MicrolinerCoordinateTransform.identity(), params);
+        this.entries.put(id, new MicrolinerEntry(new MicrolinerAABBOutline(box), params));
     }
 
-    public void showAABB(final String id, final AABB box, final MicrolinerCoordinateTransform transform, final MicrolinerParams params) {
-        this.entries.put(id, new MicrolinerEntry(new MicrolinerAABBOutline(box), transform, params));
-    }
-
-    public void showOutline(final String id, final MicrolinerOutline outline, final MicrolinerParams params) {
-        this.showOutline(id, outline, MicrolinerCoordinateTransform.identity(), params);
-    }
-
-    public void showOutline(final String id, final MicrolinerOutline outline, final MicrolinerCoordinateTransform transform, final MicrolinerParams params) {
-        this.entries.put(id, new MicrolinerEntry(outline, transform, params));
+    public void showOutline(final String id,
+                            final MicrolinerOutline outline,
+                            final MicrolinerParams params) {
+        this.entries.put(id, new MicrolinerEntry(outline, params));
     }
 
     public void tick() {
@@ -42,7 +38,14 @@ public class Microliner {
 
     public void render(final PoseStack poseStack, final MultiBufferSource buffer, final Vec3 camera) {
         for (final MicrolinerEntry entry : this.entries.values()) {
-            entry.outline().render(poseStack, buffer, camera, entry.transform(), entry.params());
+            final ClientSubLevelAccess subLevelAccess = entry.params().containingSubLevel();
+            entry.outline().render(
+                    poseStack,
+                    subLevelAccess != null ? subLevelAccess.renderPose() : null,
+                    buffer,
+                    camera,
+                    entry.params()
+            );
         }
     }
 }

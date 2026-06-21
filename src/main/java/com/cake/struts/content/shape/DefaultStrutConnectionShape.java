@@ -1,8 +1,9 @@
 package com.cake.struts.content.shape;
 
-import com.cake.struts.internal.microliner.MicrolinerCoordinateTransform;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import dev.ryanhcode.sable.companion.ClientSubLevelAccess;
+import dev.ryanhcode.sable.companion.math.Pose3dc;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -50,30 +51,36 @@ public class DefaultStrutConnectionShape implements StrutConnectionShape {
         }
 
         // Extend endpoints by 0.5 mathematically and we clip after using planes
-        this.start = fromAttachment.subtract(tangent.scale(0.5));
-        this.end = toAttachment.add(tangent.scale(0.5));
+        this.start = fromAttachment.subtract(this.tangent.scale(0.5));
+        this.end = toAttachment.add(this.tangent.scale(0.5));
 
         this.u = perpendicularUnit(this.tangent);
         this.v = safeDirection(this.tangent.cross(this.u));
 
-        final List<Vec3> rawStart = getCorners(this.start, this.u, this.v, (float) this.halfWidth, (float) this.halfHeight);
+        final List<Vec3> rawStart = getCorners(
+                this.start,
+                this.u,
+                this.v,
+                (float) this.halfWidth,
+                (float) this.halfHeight
+        );
         final List<Vec3> rawEnd = getCorners(this.end, this.u, this.v, (float) this.halfWidth, (float) this.halfHeight);
 
-        final List<List<Vec3>> clippedFaces = clipFaces(rawStart, rawEnd);
-        this.outlineEdges = buildOutlineEdges(clippedFaces);
-        this.hasGeometry = !outlineEdges.isEmpty();
+        final List<List<Vec3>> clippedFaces = this.clipFaces(rawStart, rawEnd);
+        this.outlineEdges = this.buildOutlineEdges(clippedFaces);
+        this.hasGeometry = !this.outlineEdges.isEmpty();
 
-        this.bounds = computeBounds(clippedFaces);
+        this.bounds = this.computeBounds(clippedFaces);
     }
 
     @Nullable
     @Override
     public Vec3 intersect(final Vec3 rayFrom, final Vec3 rayTo) {
-        if (!hasGeometry) {
+        if (!this.hasGeometry) {
             return null;
         }
 
-        if (!bounds.contains(rayFrom) && bounds.clip(rayFrom, rayTo).isEmpty()) {
+        if (!this.bounds.contains(rayFrom) && this.bounds.clip(rayFrom, rayTo).isEmpty()) {
             return null;
         }
 
@@ -82,32 +89,58 @@ public class DefaultStrutConnectionShape implements StrutConnectionShape {
             return null;
         }
 
-        final Vec3 segment = end.subtract(start);
+        final Vec3 segment = this.end.subtract(this.start);
         final double segmentLength = segment.length();
-        final Vec3 segmentCenter = start.add(segment.scale(0.5));
+        final Vec3 segmentCenter = this.start.add(segment.scale(0.5));
         final double halfLength = segmentLength * 0.5;
 
-        final double t = intersectRayWithObb(rayFrom, rayDir, segmentCenter, tangent, u, v, halfLength, halfWidth, halfHeight);
+        final double t = intersectRayWithObb(
+                rayFrom,
+                rayDir,
+                segmentCenter,
+                this.tangent,
+                this.u,
+                this.v,
+                halfLength,
+                this.halfWidth,
+                this.halfHeight
+        );
         if (Double.isNaN(t)) {
             return null;
         }
 
         final Vec3 hit = rayFrom.add(rayDir.scale(t));
-        if (!SurfaceClippingHelper.isInside(hit, fromSurfacePlane, SURFACE_CLIP_EPSILON)) return null;
-        if (!SurfaceClippingHelper.isInside(hit, toSurfacePlane, SURFACE_CLIP_EPSILON)) return null;
+        if (!SurfaceClippingHelper.isInside(hit, this.fromSurfacePlane, SURFACE_CLIP_EPSILON)) return null;
+        if (!SurfaceClippingHelper.isInside(hit, this.toSurfacePlane, SURFACE_CLIP_EPSILON)) return null;
 
         return hit;
     }
 
     @Override
-    public void drawOutline(final PoseStack ms, final VertexConsumer vb, final Vec3 camera, final int color, final MicrolinerCoordinateTransform transform) {
+    public void drawOutline(final PoseStack ms,
+                            final VertexConsumer vb,
+                            final Vec3 camera,
+                            final int color,
+                            final ClientSubLevelAccess clientSubLevelAccess) {
         if (!this.hasGeometry) {
             return;
         }
 
+        final Pose3dc pose3dc = clientSubLevelAccess != null ? clientSubLevelAccess.renderPose() : null;
         for (final OutlineEdge edge : this.outlineEdges) {
-            line(vb, ms, transform.transform(edge.from()).subtract(camera), transform.transform(edge.to()).subtract(camera), color);
+            line(
+                    vb,
+                    ms,
+                    (pose3dc != null ? pose3dc.transformPosition(edge.from()) : edge.from()).subtract(camera),
+                    (pose3dc != null ? pose3dc.transformPosition(edge.to()) : edge.to()).subtract(camera),
+                    color
+            );
         }
+    }
+
+    @Override
+    public BlockPos getSubLevelReferencePosition() {
+        return BlockPos.containing(this.fromSurfacePlane.point());
     }
 
     private List<List<Vec3>> clipFaces(final List<Vec3> rawStart, final List<Vec3> rawEnd) {
@@ -120,8 +153,8 @@ public class DefaultStrutConnectionShape implements StrutConnectionShape {
         faces.add(List.of(rawStart.get(2), rawStart.get(3), rawEnd.get(3), rawEnd.get(2)));
         faces.add(List.of(rawStart.get(3), rawStart.get(0), rawEnd.get(0), rawEnd.get(3)));
 
-        final List<List<Vec3>> clippedToFrom = clipFaceListToPlane(faces, fromSurfacePlane);
-        return clipFaceListToPlane(clippedToFrom, toSurfacePlane);
+        final List<List<Vec3>> clippedToFrom = this.clipFaceListToPlane(faces, this.fromSurfacePlane);
+        return this.clipFaceListToPlane(clippedToFrom, this.toSurfacePlane);
     }
 
     private List<List<Vec3>> clipFaceListToPlane(final List<List<Vec3>> faces,
@@ -142,7 +175,7 @@ public class DefaultStrutConnectionShape implements StrutConnectionShape {
             for (int i = 0; i < face.size(); i++) {
                 final Vec3 from = face.get(i);
                 final Vec3 to = face.get((i + 1) % face.size());
-                addUniqueEdge(edges, from, to);
+                this.addUniqueEdge(edges, from, to);
             }
         }
         return edges;
@@ -154,8 +187,8 @@ public class DefaultStrutConnectionShape implements StrutConnectionShape {
         }
 
         for (final OutlineEdge edge : edges) {
-            final boolean sameDirection = pointsEqual(edge.from(), from) && pointsEqual(edge.to(), to);
-            final boolean oppositeDirection = pointsEqual(edge.from(), to) && pointsEqual(edge.to(), from);
+            final boolean sameDirection = this.pointsEqual(edge.from(), from) && this.pointsEqual(edge.to(), to);
+            final boolean oppositeDirection = this.pointsEqual(edge.from(), to) && this.pointsEqual(edge.to(), from);
             if (sameDirection || oppositeDirection) {
                 return;
             }
@@ -170,8 +203,8 @@ public class DefaultStrutConnectionShape implements StrutConnectionShape {
 
     private AABB computeBounds(final List<List<Vec3>> faces) {
         if (faces.isEmpty()) {
-            AABB box = new AABB(start, start).inflate(Math.max(this.halfWidth, this.halfHeight));
-            box = box.minmax(new AABB(end, end).inflate(Math.max(this.halfWidth, this.halfHeight)));
+            AABB box = new AABB(this.start, this.start).inflate(Math.max(this.halfWidth, this.halfHeight));
+            box = box.minmax(new AABB(this.end, this.end).inflate(Math.max(this.halfWidth, this.halfHeight)));
             return box;
         }
 
@@ -184,8 +217,8 @@ public class DefaultStrutConnectionShape implements StrutConnectionShape {
         }
 
         if (first == null) {
-            AABB box = new AABB(start, start).inflate(Math.max(this.halfWidth, this.halfHeight));
-            box = box.minmax(new AABB(end, end).inflate(Math.max(this.halfWidth, this.halfHeight)));
+            AABB box = new AABB(this.start, this.start).inflate(Math.max(this.halfWidth, this.halfHeight));
+            box = box.minmax(new AABB(this.end, this.end).inflate(Math.max(this.halfWidth, this.halfHeight)));
             return box;
         }
 

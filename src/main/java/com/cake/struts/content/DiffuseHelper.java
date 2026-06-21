@@ -4,15 +4,12 @@ import com.cake.struts.mixin.StrutRenderSystemAccessor;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
-public final class StrutDiffuseHelper {
+public class DiffuseHelper {
 
     private static final Vector3fc WORLD_LIGHT_0 = new Vector3f(0.2f, 1.0f, -0.7f).normalize();
     private static final Vector3fc WORLD_LIGHT_1 = new Vector3f(-0.2f, 1.0f, 0.7f).normalize();
     private static final Vector3fc NETHER_WORLD_LIGHT_0 = new Vector3f(0.2f, 1.0f, -0.7f).normalize();
     private static final Vector3fc NETHER_WORLD_LIGHT_1 = new Vector3f(-0.2f, -1.0f, 0.7f).normalize();
-
-    private StrutDiffuseHelper() {
-    }
 
     public static float calculateDiffuse(final Vector3f normal) {
         final Vector3f[] directions = StrutRenderSystemAccessor.struts$getShaderLightDirections();

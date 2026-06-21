@@ -20,19 +20,19 @@ class LevelStrutOutlineStore {
     private long nextValidationGameTime = Long.MIN_VALUE;
 
     void put(final ConnectionKey key, final StrutConnectionShape shape) {
-        shapes.put(key, shape);
+        this.shapes.put(key, shape);
     }
 
     void remove(final ConnectionKey key) {
-        shapes.remove(key);
+        this.shapes.remove(key);
     }
 
     void removeAllFor(final BlockPos pos) {
-        shapes.keySet().removeIf(key -> key.a().equals(pos) || key.b().equals(pos));
+        this.shapes.keySet().removeIf(key -> key.a().equals(pos) || key.b().equals(pos));
     }
 
     Iterable<Map.Entry<ConnectionKey, StrutConnectionShape>> entries() {
-        return shapes.entrySet();
+        return this.shapes.entrySet();
     }
 
     /**
@@ -41,12 +41,12 @@ class LevelStrutOutlineStore {
      */
     void validate(final Level level) {
         final long gameTime = level.getGameTime();
-        if (gameTime < nextValidationGameTime) {
+        if (gameTime < this.nextValidationGameTime) {
             return;
         }
-        nextValidationGameTime = gameTime + VALIDATE_INTERVAL_TICKS;
+        this.nextValidationGameTime = gameTime + VALIDATE_INTERVAL_TICKS;
 
-        shapes.keySet().removeIf(key -> {
+        this.shapes.keySet().removeIf(key -> {
             if (!level.isLoaded(key.a()) || !level.isLoaded(key.b())) {
                 return false; // don't evict unloaded chunks; they may just be temporarily unavailable
             }

@@ -12,6 +12,8 @@ import com.cake.struts.network.BreakStrutPacket;
 import com.cake.struts.registry.StrutItemTags;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import dev.ryanhcode.sable.companion.ClientSubLevelAccess;
+import dev.ryanhcode.sable.companion.SableCompanion;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -95,17 +97,19 @@ public class StrutInteractionHandler {
                 final CableStrutInfo effectiveRenderInfo = cableRenderInfo != null && be.isTensioned(conn.relativeOffset())
                         ? cableRenderInfo.withZeroSag()
                         : cableRenderInfo;
-                store.put(key, cableRenderInfo != null
-                        ? new CableStrutConnectionShape(
-                        geom.getFromAttachment(), geom.getToAttachment(),
-                        geom.getHalfX(), geom.getHalfY(), effectiveRenderInfo
-                )
-                        : new DefaultStrutConnectionShape(
-                        geom.getFromAttachment(), geom.getToAttachment(),
-                        geom.getHalfX(), geom.getHalfY(),
-                        geom.getFromPos(), geom.getFromFacing(),
-                        geom.getToPos(), geom.getToFacing()
-                ));
+                store.put(
+                        key, cableRenderInfo != null
+                                ? new CableStrutConnectionShape(
+                                geom.getFromAttachment(), geom.getToAttachment(),
+                                geom.getHalfX(), geom.getHalfY(), effectiveRenderInfo
+                        )
+                                : new DefaultStrutConnectionShape(
+                                geom.getFromAttachment(), geom.getToAttachment(),
+                                geom.getHalfX(), geom.getHalfY(),
+                                geom.getFromPos(), geom.getFromFacing(),
+                                geom.getToPos(), geom.getToFacing()
+                        )
+                );
             }
         }
     }
@@ -173,10 +177,22 @@ public class StrutInteractionHandler {
         Vec3 bestHit = null;
 
         for (final Map.Entry<ConnectionKey, StrutConnectionShape> entry : store.entries()) {
-            final Vec3 hit = entry.getValue().intersect(eye, traceTarget);
+            final ClientSubLevelAccess clientSubLevel = SableCompanion.INSTANCE.getContainingClient(
+                    entry.getValue().getSubLevelReferencePosition()
+            );
+
+            Vec3 hit = entry.getValue().intersect(
+                    clientSubLevel != null ? clientSubLevel.lastPose().transformPositionInverse(eye) : eye,
+                    clientSubLevel != null ? clientSubLevel.lastPose().transformPositionInverse(traceTarget) : traceTarget
+            );
             if (hit == null) {
                 continue;
             }
+
+            if (clientSubLevel != null) {
+                hit = clientSubLevel.lastPose().transformPosition(hit);
+            }
+
             final double distSq = eye.distanceToSqr(hit);
             if (distSq < bestDistanceSq) {
                 bestDistanceSq = distSq;
@@ -194,13 +210,12 @@ public class StrutInteractionHandler {
 
     @SubscribeEvent
     public static void onRenderWorld(final RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) {
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
             return;
         }
         if (selectedShape == null) {
             return;
         }
-
         final Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) {
             clearSelection();
@@ -213,10 +228,19 @@ public class StrutInteractionHandler {
 
         final PoseStack ms = event.getPoseStack();
         ms.pushPose();
-        selectedShape.drawOutline(ms, vb, camera);
+        final BlockPos subLevelReferencePosition = selectedShape.getSubLevelReferencePosition();
+        final ClientSubLevelAccess containingClient = SableCompanion.INSTANCE.getContainingClient(
+                subLevelReferencePosition);
+        selectedShape.drawOutline(
+                ms,
+                vb,
+                camera,
+                0x66000000,
+                containingClient
+        );
         if (selectedKey != null) {
-            drawAttachmentOutline(mc.level, ms, vb, camera, selectedKey.a());
-            drawAttachmentOutline(mc.level, ms, vb, camera, selectedKey.b());
+            drawAttachmentOutline(mc.level, ms, vb, camera, selectedKey.a(), containingClient);
+            drawAttachmentOutline(mc.level, ms, vb, camera, selectedKey.b(), containingClient);
         }
         ms.popPose();
 
@@ -293,7 +317,11 @@ public class StrutInteractionHandler {
         }
 
         breakTicks++;
-        breakProgress += player.getAbilities().instabuild ? 1.0F : blockState.getDestroyProgress(player, level, currentBreakPos);
+        breakProgress += player.getAbilities().instabuild ? 1.0F : blockState.getDestroyProgress(
+                player,
+                level,
+                currentBreakPos
+        );
 
         final int progress = Math.max(0, Math.min(9, (int) (breakProgress * 10.0F) - 1));
         level.destroyBlockProgress(player.getId(), currentBreakPos, progress);
@@ -331,17 +359,27 @@ public class StrutInteractionHandler {
     }
 
     private static void drawAttachmentOutline(final ClientLevel level, final PoseStack ms, final VertexConsumer vb,
-                                              final Vec3 camera, final BlockPos pos) {
+                                              final Vec3 camera, final BlockPos pos,
+                                              final ClientSubLevelAccess containingClientSubLevel) {
         final BlockState state = level.getBlockState(pos);
         if (!(state.getBlock() instanceof StrutBlock)) {
             return;
         }
         final VoxelShape attachmentShape = state.getShape(level, pos);
-        attachmentShape.forAllEdges((minX, minY, minZ, maxX, maxY, maxZ) -> drawAttachmentEdge(
-                ms, vb, camera,
-                minX + pos.getX(), minY + pos.getY(), minZ + pos.getZ(),
-                maxX + pos.getX(), maxY + pos.getY(), maxZ + pos.getZ()
-        ));
+        attachmentShape.forAllEdges((minX, minY, minZ, maxX, maxY, maxZ) -> {
+            Vec3 from = new Vec3(minX + pos.getX(), minY + pos.getY(), minZ + pos.getZ());
+            Vec3 to = new Vec3(maxX + pos.getX(), maxY + pos.getY(), maxZ + pos.getZ());
+
+            if (containingClientSubLevel != null) {
+                from = containingClientSubLevel.renderPose().transformPosition(from);
+                to = containingClientSubLevel.renderPose().transformPosition(to);
+            }
+
+            drawAttachmentEdge(
+                    ms, vb, camera,
+                    from.x, from.y, from.z, to.x, to.y, to.z
+            );
+        });
     }
 
     private static void drawAttachmentEdge(final PoseStack ms, final VertexConsumer vb, final Vec3 camera,
