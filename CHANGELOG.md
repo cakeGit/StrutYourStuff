@@ -22,3 +22,8 @@
 # 1.21.1-1.2.1
 
 - Fix strut double rendering
+-
+
+# 1.21.1-1.2.2
+
+- Fix strut rotations with create schematics and transforms

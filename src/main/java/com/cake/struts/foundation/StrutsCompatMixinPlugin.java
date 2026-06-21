@@ -1,6 +1,7 @@
-package com.cake.struts.mixin.compat.create;
+package com.cake.struts.foundation;
 
-import net.neoforged.fml.ModList;
+import net.neoforged.fml.loading.FMLLoader;
+import net.neoforged.fml.loading.LoadingModList;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -22,8 +23,8 @@ public class StrutsCompatMixinPlugin implements IMixinConfigPlugin {
     @Override
     public boolean shouldApplyMixin(final String targetClassName, final String mixinClassName) {
         if (mixinClassName.startsWith("com.cake.struts.mixin.compat.create.")) {
-            final ModList modList = ModList.get();
-            return modList != null && modList.isLoaded("create");
+            final LoadingModList modList = FMLLoader.getLoadingModList();
+            return modList.getModFileById("create") != null;
         }
         return true;
     }
@@ -38,10 +39,16 @@ public class StrutsCompatMixinPlugin implements IMixinConfigPlugin {
     }
 
     @Override
-    public void preApply(final String targetClassName, final ClassNode targetClass, final String mixinClassName, final IMixinInfo mixinInfo) {
+    public void preApply(final String targetClassName,
+                         final ClassNode targetClass,
+                         final String mixinClassName,
+                         final IMixinInfo mixinInfo) {
     }
 
     @Override
-    public void postApply(final String targetClassName, final ClassNode targetClass, final String mixinClassName, final IMixinInfo mixinInfo) {
+    public void postApply(final String targetClassName,
+                          final ClassNode targetClass,
+                          final String mixinClassName,
+                          final IMixinInfo mixinInfo) {
     }
 }
