@@ -11,18 +11,25 @@ import net.minecraft.world.level.Level;
 
 import java.util.UUID;
 
+//TODO: fix since this is clearly broken
 public class SableCompat {
 
     public static boolean isInSubLevel(final Level level, final BlockPos pos) {
         return SableCompanion.INSTANCE.getContaining(level, pos) != null;
     }
 
-    public static StrutPreviewRenderTransforms resolvePreviewRenderTransforms(final ClientLevel level, final BlockPos fromPos, final BlockPos toPos) {
+    public static StrutPreviewRenderTransforms resolvePreviewRenderTransforms(final ClientLevel level,
+                                                                              final BlockPos fromPos,
+                                                                              final BlockPos toPos) {
         final ResolvedSubLevel fromSubLevel = resolveSubLevel(level, fromPos);
         final ResolvedSubLevel toSubLevel = resolveSubLevel(level, toPos);
         final MicrolinerCoordinateTransform fromTransform = transformFor(fromSubLevel);
         final MicrolinerCoordinateTransform toTransform = transformFor(toSubLevel);
-        final MicrolinerCoordinateTransform connectionTransform = connectionTransform(fromSubLevel, toSubLevel, fromTransform);
+        final MicrolinerCoordinateTransform connectionTransform = connectionTransform(
+                fromSubLevel,
+                toSubLevel,
+                fromTransform
+        );
         return new StrutPreviewRenderTransforms(fromTransform, toTransform, connectionTransform);
     }
 
