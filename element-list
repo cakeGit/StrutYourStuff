@@ -1,6 +1,5 @@
 com.cake.struts
 com.cake.struts.compat.flywheel
-com.cake.struts.compat.sable
 com.cake.struts.content
 com.cake.struts.content.block
 com.cake.struts.content.cap
