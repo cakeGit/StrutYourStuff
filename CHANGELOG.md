@@ -31,3 +31,8 @@
 # 1.21.1-1.2.3
 
 - Improve sable behavior
+-
+
+# 1.21.1-1.2.4
+
+- Improve item pickup behavior
