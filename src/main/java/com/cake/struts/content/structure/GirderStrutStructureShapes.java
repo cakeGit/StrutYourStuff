@@ -108,11 +108,11 @@ public class GirderStrutStructureShapes {
                     for (final GirderStrutConnectionShape connectionShape : evictedObjects) {
                         for (final BlockPos position : connectionShape.geometry().getPositions()) {
                             if (new ChunkPos(position).equals(chunk)) {
-                                final PositionData positionData = shapesByPosition.get(position);
+                                final PositionData positionData = ShapeRegistry.this.shapesByPosition.get(position);
                                 if (positionData != null) {
                                     positionData.remove(connectionShape.key());
                                     if (positionData.perConnectionShapes.isEmpty()) {
-                                        shapesByPosition.remove(position);
+                                        ShapeRegistry.this.shapesByPosition.remove(position);
                                     }
                                 }
                             }
@@ -124,7 +124,7 @@ public class GirderStrutStructureShapes {
 
         void registerConnection(final Level level, final BlockPos from, final Direction fromFacing, final BlockPos to, final Direction toFacing, final StrutModelType modelType) {
             final ConnectionKey key = new ConnectionKey(from, to);
-            if (connectionsByKey.containsKey(key)) {
+            if (this.connectionsByKey.containsKey(key)) {
                 return;
             }
 
@@ -135,14 +135,16 @@ public class GirderStrutStructureShapes {
                 chunks.add(new ChunkPos(pos));
             }
             final GirderStrutConnectionShape shapeObj = new GirderStrutConnectionShape(key, geometry, chunks.toArray(new ChunkPos[0]));
-            connectionsByKey.put(key, shapeObj);
-            connectionsByChunk.add(shapeObj);
+            this.connectionsByKey.put(key, shapeObj);
+            this.connectionsByChunk.add(shapeObj);
 
             for (final BlockPos pos : geometry.getPositions()) {
+                if (!level.isLoaded(pos)) continue;
+
                 final VoxelShape shape = geometry.getShapeForPosition(pos);
                 if (shape.isEmpty()) continue;
 
-                final PositionData pd = shapesByPosition.computeIfAbsent(pos, $ -> new PositionData());
+                final PositionData pd = this.shapesByPosition.computeIfAbsent(pos, $ -> new PositionData());
                 final boolean wasEmpty = pd.perConnectionShapes.isEmpty();
                 pd.add(key, shape);
 
@@ -153,17 +155,19 @@ public class GirderStrutStructureShapes {
         }
 
         void unregisterConnection(final Level level, final ConnectionKey key) {
-            final GirderStrutConnectionShape found = connectionsByKey.remove(key);
+            final GirderStrutConnectionShape found = this.connectionsByKey.remove(key);
             if (found == null) return;
 
-            connectionsByChunk.remove(found);
+            this.connectionsByChunk.remove(found);
 
             for (final BlockPos pos : found.geometry().getPositions()) {
-                final PositionData pd = shapesByPosition.get(pos);
+                final PositionData pd = this.shapesByPosition.get(pos);
                 if (pd != null) {
                     pd.remove(key);
                     if (pd.perConnectionShapes.isEmpty()) {
-                        shapesByPosition.remove(pos);
+                        if (!level.isLoaded(pos)) continue;
+
+                        this.shapesByPosition.remove(pos);
                         if (level.getBlockState(pos).getBlock() == StrutBlocks.GIRDER_STRUT_STRUCTURE.get()) {
                             level.removeBlock(pos, false);
                         }
@@ -173,42 +177,42 @@ public class GirderStrutStructureShapes {
         }
 
         VoxelShape getShape(final BlockPos pos) {
-            final PositionData pd = shapesByPosition.get(pos);
+            final PositionData pd = this.shapesByPosition.get(pos);
             return pd == null ? Shapes.empty() : pd.mergedShape;
         }
 
         VoxelShape getOutlineShape(final BlockPos pos, final CollisionContext context) {
-            final PositionData pd = shapesByPosition.get(pos);
+            final PositionData pd = this.shapesByPosition.get(pos);
             return pd == null ? Shapes.empty() : pd.getOutlineShape(pos, context);
         }
 
         @Nullable ConnectionKey getTargetedConnection(final BlockPos pos, final Vec3 origin, final Vec3 direction) {
-            final PositionData pd = shapesByPosition.get(pos);
+            final PositionData pd = this.shapesByPosition.get(pos);
             return pd == null ? null : pd.getTargetedConnection(pos, origin, direction);
         }
 
         Set<ConnectionKey> getConnectionsAt(final BlockPos pos) {
-            final PositionData pd = shapesByPosition.get(pos);
+            final PositionData pd = this.shapesByPosition.get(pos);
             return pd == null ? Set.of() : Set.copyOf(pd.perConnectionShapes.keySet());
         }
 
         void removePositionData(final BlockPos pos) {
-            shapesByPosition.remove(pos);
+            this.shapesByPosition.remove(pos);
         }
 
         boolean hasPositionData(final BlockPos pos) {
-            return shapesByPosition.containsKey(pos);
+            return this.shapesByPosition.containsKey(pos);
         }
 
         Set<BlockPos> getStructurePositionsForConnectionsAt(final BlockPos pos) {
-            final PositionData positionData = shapesByPosition.get(pos);
+            final PositionData positionData = this.shapesByPosition.get(pos);
             if (positionData == null) {
                 return Set.of();
             }
 
             final Set<BlockPos> structurePositions = new LinkedHashSet<>();
             for (final ConnectionKey key : positionData.perConnectionShapes.keySet()) {
-                final GirderStrutConnectionShape connectionShape = connectionsByKey.get(key);
+                final GirderStrutConnectionShape connectionShape = this.connectionsByKey.get(key);
                 if (connectionShape == null) {
                     continue;
                 }
@@ -216,7 +220,7 @@ public class GirderStrutStructureShapes {
                 for (final BlockPos connectionPos : connectionShape.geometry().getPositions()) {
                     if (!connectionPos.equals(key.a())
                             && !connectionPos.equals(key.b())
-                            && shapesByPosition.containsKey(connectionPos)) {
+                            && this.shapesByPosition.containsKey(connectionPos)) {
                         structurePositions.add(connectionPos);
                     }
                 }
@@ -225,24 +229,24 @@ public class GirderStrutStructureShapes {
         }
 
         void restoreMissingStructureBlocksAt(final Level level, final BlockPos pos) {
-            for (final BlockPos structurePos : getStructurePositionsForConnectionsAt(pos)) {
+            for (final BlockPos structurePos : this.getStructurePositionsForConnectionsAt(pos)) {
                 placeStructureBlockIfPossible(level, structurePos);
             }
         }
 
         void queueRestoreFromBreak(final BlockPos pos) {
-            queuedRestores.add(new BlockPos(pos));
+            this.queuedRestores.add(new BlockPos(pos));
         }
 
         void flushQueuedRestores(final Level level) {
-            if (queuedRestores.isEmpty()) {
+            if (this.queuedRestores.isEmpty()) {
                 return;
             }
 
-            final Set<BlockPos> positionsToRestore = Set.copyOf(queuedRestores);
-            queuedRestores.clear();
+            final Set<BlockPos> positionsToRestore = Set.copyOf(this.queuedRestores);
+            this.queuedRestores.clear();
             for (final BlockPos pos : positionsToRestore) {
-                restoreMissingStructureBlocksAt(level, pos);
+                this.restoreMissingStructureBlocksAt(level, pos);
             }
         }
     }

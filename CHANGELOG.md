@@ -39,3 +39,7 @@
 # 1.21.1-1.2.5
 
 - Tweak lang
+
+# 1.21.1-1.2.6
+
+- Attempted to improve load safety for C2ME
