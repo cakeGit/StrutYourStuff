@@ -7,6 +7,7 @@ import com.cake.struts.content.structure.GirderStrutShapedBlock;
 import com.cake.struts.registry.StrutItemTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -16,8 +17,8 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.*;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -48,9 +49,18 @@ public abstract class StrutBlock extends Block implements SimpleWaterloggedBlock
 
     public StrutBlock(final Properties properties, final StrutModelType modelType, final @Nullable CableStrutInfo cableRenderInfo) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(FACING, Direction.UP).setValue(WATERLOGGED, false));
+        this.registerDefaultState(this.defaultBlockState().setValue(FACING, Direction.UP).setValue(WATERLOGGED, false));
         this.modelType = modelType;
         this.cableRenderInfo = cableRenderInfo;
+    }
+
+    @Override
+    public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(final Level p_153212_, final BlockState p_153213_, final BlockEntityType<T> p_153214_) {
+        return (level, pos, state, blockEntity) -> {
+            if (blockEntity instanceof final StrutBlockEntity strutBlockEntity) {
+                strutBlockEntity.tick();
+            }
+        };
     }
 
     protected abstract BlockEntityType<? extends StrutBlockEntity> getStrutBlockEntityType();
@@ -122,17 +132,17 @@ public abstract class StrutBlock extends Block implements SimpleWaterloggedBlock
     public @NotNull VoxelShape getCollisionShape(final @NotNull BlockState state, final @NotNull BlockGetter level,
                                                  final @NotNull BlockPos pos, final @NotNull CollisionContext context) {
         final VoxelShape attachmentShape = getAttachmentBaseShape(state.getValue(FACING), false);
-        if (cableRenderInfo != null) {
+        if (this.cableRenderInfo != null) {
             return attachmentShape;
         }
-        final VoxelShape strutShape = getStrutShape(level, pos);
+        final VoxelShape strutShape = this.getStrutShape(level, pos);
         return strutShape.isEmpty() ? attachmentShape : Shapes.or(attachmentShape, strutShape);
     }
 
     @Nullable
     @Override
     public BlockEntity newBlockEntity(final @NotNull BlockPos pos, final @NotNull BlockState state) {
-        return new StrutBlockEntity(getStrutBlockEntityType(), pos, state);
+        return new StrutBlockEntity(this.getStrutBlockEntityType(), pos, state);
     }
 
     @Override
@@ -145,7 +155,7 @@ public abstract class StrutBlock extends Block implements SimpleWaterloggedBlock
         final boolean shouldPreventDrops = player.hasInfiniteMaterials();
 
         if (shouldPreventDrops && !level.isClientSide) {
-            destroyConnectedStrut(level, pos, false);
+            this.destroyConnectedStrut(level, pos, false);
         }
 
         return super.playerWillDestroy(level, pos, state, player);
@@ -166,22 +176,12 @@ public abstract class StrutBlock extends Block implements SimpleWaterloggedBlock
         }
     }
 
-    @Override
-    public void onRemove(final BlockState state, final @NotNull Level level, final @NotNull BlockPos pos, final BlockState newState, final boolean isMoving) {
-        if (!state.is(newState.getBlock())) {
-            if (!level.isClientSide) {
-                destroyConnectedStrut(level, pos, true);
-            }
-        }
-        super.onRemove(state, level, pos, newState, isMoving);
-    }
-
     public StrutModelType getModelType() {
-        return modelType;
+        return this.modelType;
     }
 
     public @Nullable CableStrutInfo getCableRenderInfo() {
-        return cableRenderInfo;
+        return this.cableRenderInfo;
     }
 
     public void setModelType(final StrutModelType modelType) {

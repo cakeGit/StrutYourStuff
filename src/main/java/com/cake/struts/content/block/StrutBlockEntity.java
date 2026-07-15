@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -29,6 +30,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
+
+import static com.cake.struts.content.block.StrutBlock.MAX_SPAN;
 
 public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowLighter {
 
@@ -50,10 +53,30 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     private final Set<BlockPos> tensionedOffsets = new HashSet<>();
     public List<BakedQuad> connectionQuadCache;
 
+    protected boolean checkNextTick = true;
+
     public StrutBlockEntity(final BlockEntityType<? extends StrutBlockEntity> type,
                             final BlockPos pos,
                             final BlockState state) {
         super(type, pos, state);
+    }
+
+    public void tick() {
+        if (this.level == null) return;
+        if (this.checkNextTick && !this.level.isClientSide) {
+            this.checkNextTick = false;
+            for (final GirderConnectionNode conn : this.connections) {//OK SO: the isloaded check fails cause the transform is fucked or something, relative offset seems to go global
+                final BlockPos other = conn.absoluteFrom(this.getBlockPos());
+                if (!this.level.isLoaded(other)) continue;
+                if ((this.level.getBlockEntity(other) instanceof final StrutBlockEntity otherBE)) {
+                    if (otherBE.connections.stream().anyMatch(c -> c.absoluteFrom(other).equals(this.getBlockPos()))) {
+                        return;
+                    }
+                }
+                this.removeConnection(other);
+            }
+            this.removeIfEmpty();
+        }
     }
 
     @Override
@@ -91,6 +114,14 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
                     );
                 }
                 this.registeredConnections.clear();
+                for (final GirderConnectionNode data : this.connections) {
+                    final BlockPos other = data.absoluteFrom(this.getBlockPos());
+                    if (!this.level.isLoaded(other)) continue;
+                    if (this.level.getBlockEntity(other) instanceof final StrutBlockEntity otherBE) {
+                        otherBE.recheckNextTick();
+                    }
+                }
+
             } else if (CLIENT_REMOVE_LISTENER != null) {
                 CLIENT_REMOVE_LISTENER.accept(this.level, this.getBlockPos());
             }
@@ -132,6 +163,13 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
                 GirderStrutStructureShapes.unregisterConnection(this.level, this.getBlockPos(), pos);
             }
             this.notifyModelChange();
+        }
+        this.removeIfEmpty();
+    }
+
+    private void removeIfEmpty() {
+        if (this.connections.isEmpty() && this.unresolvedLegacyConnections.isEmpty() && !(this.level == null)) {
+            this.level.destroyBlock(this.getBlockPos(), true);
         }
     }
 
@@ -250,6 +288,9 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
             for (final Tag t : list) {
                 if (t instanceof final CompoundTag ct) {
                     final BlockPos offset = new BlockPos(ct.getInt("X"), ct.getInt("Y"), ct.getInt("Z"));
+                    if (offset.distSqr(Vec3i.ZERO) > MAX_SPAN * MAX_SPAN) {
+                        continue;
+                    }
                     if (ct.contains("Facing", Tag.TAG_INT)) {
                         final Direction facing = Direction.from3DDataValue(ct.getInt("Facing"));
                         this.connections.add(new GirderConnectionNode(offset, facing));
@@ -351,13 +392,17 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     public void transform(final StructureTransform transform) {
         final List<GirderConnectionNode> transformedConnections = this.connections.stream()
                 .map(conn -> new GirderConnectionNode(
-                        transform.apply(conn.relativeOffset()),
+                        transform.applyWithoutOffset(conn.relativeOffset()),
                         transform.rotateFacing(conn.peerFacing())
                 ))
                 .toList();
         this.connections.clear();
         this.unresolvedLegacyConnections.clear();
         this.connections.addAll(transformedConnections);
+    }
+
+    public void recheckNextTick() {
+        this.checkNextTick = true;
     }
 }
 

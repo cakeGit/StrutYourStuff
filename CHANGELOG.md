@@ -43,3 +43,8 @@
 # 1.21.1-1.2.6
 
 - Attempted to improve load safety for C2ME
+
+# 1.21.1-1.2.7
+
+- Fix duplication issue when assembling a strut onto a sublevel with a physics assembler.
+- Improve transform behaviour
