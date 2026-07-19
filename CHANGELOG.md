@@ -48,3 +48,8 @@
 
 - Fix duplication issue when assembling a strut onto a sublevel with a physics assembler.
 - Improve transform behaviour
+
+# 1.21.1-1.2.8
+
+- Fix duplication issue but like for real this time
+- Fix click-through issue with struts on levels and for sub-levels

@@ -38,7 +38,7 @@ public class GirderStrutStructureBlock extends Block implements GirderStrutShape
 
     public GirderStrutStructureBlock(final Properties properties) {
         super(properties);
-        registerDefaultState(defaultBlockState().setValue(WATERLOGGED, false));
+        this.registerDefaultState(this.defaultBlockState().setValue(WATERLOGGED, false));
     }
 
     @Override
@@ -67,7 +67,7 @@ public class GirderStrutStructureBlock extends Block implements GirderStrutShape
     @Override
     public @NotNull VoxelShape getCollisionShape(final @NotNull BlockState state, final @NotNull BlockGetter level,
                                                  final @NotNull BlockPos pos, final @NotNull CollisionContext context) {
-        return getStrutShape(level, pos);
+        return this.getStrutShape(level, pos);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class GirderStrutStructureBlock extends Block implements GirderStrutShape
     @Override
     public BlockState getStateForPlacement(final @NotNull BlockPlaceContext context) {
         final FluidState fluidState = context.getLevel().getFluidState(context.getClickedPos());
-        return defaultBlockState().setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
+        return this.defaultBlockState().setValue(WATERLOGGED, fluidState.getType() == Fluids.WATER);
     }
 
     @Override
@@ -99,7 +99,7 @@ public class GirderStrutStructureBlock extends Block implements GirderStrutShape
     @Override
     public void onRemove(final @NotNull BlockState state, final @NotNull Level level, final @NotNull BlockPos pos,
                          final @NotNull BlockState newState, final boolean isMoving) {
-        if (!state.is(newState.getBlock())) {
+        if (!state.is(newState.getBlock()) && !isMoving) {
             if (newState.isAir()) {
                 // Mining/Breaking
                 for (final ConnectionKey key : Set.copyOf(GirderStrutStructureShapes.getConnectionsAt(level, pos))) {

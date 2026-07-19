@@ -65,7 +65,7 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
         if (this.level == null) return;
         if (this.checkNextTick && !this.level.isClientSide) {
             this.checkNextTick = false;
-            for (final GirderConnectionNode conn : this.connections) {//OK SO: the isloaded check fails cause the transform is fucked or something, relative offset seems to go global
+            for (final GirderConnectionNode conn : this.connections) {
                 final BlockPos other = conn.absoluteFrom(this.getBlockPos());
                 if (!this.level.isLoaded(other)) continue;
                 if ((this.level.getBlockEntity(other) instanceof final StrutBlockEntity otherBE)) {

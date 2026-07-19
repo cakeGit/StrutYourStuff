@@ -171,7 +171,7 @@ public class StrutInteractionHandler {
         final Vec3 look = player.getLookAngle();
         final Vec3 traceTarget = eye.add(look.scale(range));
 
-        double bestDistanceSq = Double.MAX_VALUE;
+        double bestDistanceSq = mc.hitResult != null ? SableCompanion.INSTANCE.distanceSquaredWithSubLevels(level, mc.hitResult.getLocation(), eye) : Double.MAX_VALUE;
         ConnectionKey bestKey = null;
         StrutConnectionShape bestShape = null;
         Vec3 bestHit = null;
