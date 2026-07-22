@@ -160,17 +160,14 @@ public class StrutInteractionHandler {
         store.validate(level);
 
         final Vec3 eye = player.getEyePosition();
-        final double range = 5.0 + 1.0;
-        final Vec3 look = player.getLookAngle();
-        final Vec3 traceTarget = eye.add(look.scale(range));
-
+        final Vec3 nearestOccluder = Minecraft.getInstance().hitResult != null ? Minecraft.getInstance().hitResult.getLocation() : eye;
         double bestDistanceSq = Double.MAX_VALUE;
         ConnectionKey bestKey = null;
         StrutConnectionShape bestShape = null;
         Vec3 bestHit = null;
 
         for (final Map.Entry<ConnectionKey, StrutConnectionShape> entry : store.entries()) {
-            final Vec3 hit = entry.getValue().intersect(eye, traceTarget);
+            final Vec3 hit = entry.getValue().intersect(eye, nearestOccluder);
             if (hit == null) {
                 continue;
             }
