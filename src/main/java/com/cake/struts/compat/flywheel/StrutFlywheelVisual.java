@@ -77,7 +77,8 @@ public class StrutFlywheelVisual extends AbstractBlockEntityVisual<StrutBlockEnt
         if (this.cachedModel == null) {
             final boolean constantAmbientLight = this.level instanceof final ClientLevel cl
                     && cl.effects().constantAmbientLight();
-            this.cachedModel = FlywheelMeshBuilder.buildLitModel(this.cachedQuads, this.blockEntity.createLighter(), constantAmbientLight);
+            this.cachedModel = FlywheelMeshBuilder.buildLitModel(this.cachedQuads, this.blockEntity.createLighter(),
+                    constantAmbientLight, strutBlock.getModelType().getRenderType());
         }
 
         if (this.instance != null) {
