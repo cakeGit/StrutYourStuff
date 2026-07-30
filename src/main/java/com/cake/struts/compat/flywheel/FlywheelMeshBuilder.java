@@ -21,7 +21,7 @@ public class FlywheelMeshBuilder {
 
     public static Model buildLitModel(final List<BakedQuad> quads,
                                       final Function<Vector3f, Integer> lighter,
-                                      final boolean constantAmbientLight) {
+                                      final boolean constantAmbientLight, RenderType renderType) {
         final int vertexCount = quads.size() * 4;
         final MemoryBlock memory = MemoryBlock.mallocTracked(vertexCount * NoOverlayVertexView.STRIDE);
         final NoOverlayVertexView view = new NoOverlayVertexView();
@@ -76,7 +76,7 @@ public class FlywheelMeshBuilder {
             }
         }
 
-        final Material material = ModelUtil.getMaterial(RenderType.solid(), false);
+        final Material material = ModelUtil.getMaterial(renderType, false);
         final SimpleQuadMesh mesh = new SimpleQuadMesh(view, "strut_lit");
         return new SimpleModel(List.of(new Model.ConfiguredMesh(material, mesh)));
     }
