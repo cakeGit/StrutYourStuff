@@ -109,7 +109,7 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><a href="com/cake/struts/content/StrutModelBuilder.html#buildConnectionQuads(net.minecraft.world.level.BlockAndTintGetter,net.minecraft.core.BlockPos,net.minecraft.world.level.block.state.BlockState,com.cake.struts.content.block.StrutBlockEntity,com.cake.struts.content.StrutModelType)" class="member-name-link">buildConnectionQuads(BlockAndTintGetter, BlockPos, BlockState, StrutBlockEntity, StrutModelType)</a> - Static method in class com.cake.struts.content.<a href="com/cake/struts/content/StrutModelBuilder.html" title="class in com.cake.struts.content">StrutModelBuilder</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="com/cake/struts/compat/flywheel/FlywheelMeshBuilder.html#buildLitModel(java.util.List,java.util.function.Function,boolean)" class="member-name-link">buildLitModel(List&lt;BakedQuad&gt;, Function&lt;Vector3f, Integer&gt;, boolean)</a> - Static method in class com.cake.struts.compat.flywheel.<a href="com/cake/struts/compat/flywheel/FlywheelMeshBuilder.html" title="class in com.cake.struts.compat.flywheel">FlywheelMeshBuilder</a></dt>
+<dt><a href="com/cake/struts/compat/flywheel/FlywheelMeshBuilder.html#buildLitModel(java.util.List,java.util.function.Function,boolean,net.minecraft.client.renderer.RenderType)" class="member-name-link">buildLitModel(List&lt;BakedQuad&gt;, Function&lt;Vector3f, Integer&gt;, boolean, RenderType)</a> - Static method in class com.cake.struts.compat.flywheel.<a href="com/cake/struts/compat/flywheel/FlywheelMeshBuilder.html" title="class in com.cake.struts.compat.flywheel">FlywheelMeshBuilder</a></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 class="title" id="I:C">C</h2>
@@ -499,6 +499,8 @@ loadScripts(document, 'script');</script>
 <dt><a href="com/cake/struts/content/block/StrutBlockEntityRenderer.html#getRenderBoundingBox(com.cake.struts.content.block.StrutBlockEntity)" class="member-name-link">getRenderBoundingBox(StrutBlockEntity)</a> - Method in class com.cake.struts.content.block.<a href="com/cake/struts/content/block/StrutBlockEntityRenderer.html" title="class in com.cake.struts.content.block">StrutBlockEntityRenderer</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/cake/struts/content/structure/GirderStrutStructureBlock.html#getRenderShape(net.minecraft.world.level.block.state.BlockState)" class="member-name-link">getRenderShape(BlockState)</a> - Method in class com.cake.struts.content.structure.<a href="com/cake/struts/content/structure/GirderStrutStructureBlock.html" title="class in com.cake.struts.content.structure">GirderStrutStructureBlock</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="com/cake/struts/content/StrutModelType.html#getRenderType()" class="member-name-link">getRenderType()</a> - Method in record class com.cake.struts.content.<a href="com/cake/struts/content/StrutModelType.html" title="class in com.cake.struts.content">StrutModelType</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/cake/struts/content/structure/GirderStrutStructureBlock.html#getShadeBrightness(net.minecraft.world.level.block.state.BlockState,net.minecraft.world.level.BlockGetter,net.minecraft.core.BlockPos)" class="member-name-link">getShadeBrightness(BlockState, BlockGetter, BlockPos)</a> - Method in class com.cake.struts.content.structure.<a href="com/cake/struts/content/structure/GirderStrutStructureBlock.html" title="class in com.cake.struts.content.structure">GirderStrutStructureBlock</a></dt>
 <dd>&nbsp;</dd>
@@ -930,6 +932,10 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Equivalent to <code>LevelRenderer.renderLineBox(VertexConsumer, double, double, double, double, double, double, float, float, float, float)</code> for just a line.</div>
 </dd>
+<dt><a href="com/cake/struts/content/StrutModelType.html#renderType()" class="member-name-link">renderType()</a> - Method in record class com.cake.struts.content.<a href="com/cake/struts/content/StrutModelType.html" title="class in com.cake.struts.content">StrutModelType</a></dt>
+<dd>
+<div class="block">Returns the value of the <code>renderType</code> record component.</div>
+</dd>
 <dt><a href="com/cake/struts/content/structure/GirderStrutStructureShapes.html#restoreMissingStructureBlocksAt(net.minecraft.world.level.Level,net.minecraft.core.BlockPos)" class="member-name-link">restoreMissingStructureBlocksAt(Level, BlockPos)</a> - Static method in class com.cake.struts.content.structure.<a href="com/cake/struts/content/structure/GirderStrutStructureShapes.html" title="class in com.cake.struts.content.structure">GirderStrutStructureShapes</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/cake/struts/content/block/StrutBlock.html#rotate(net.minecraft.world.level.block.state.BlockState,net.minecraft.world.level.block.Rotation)" class="member-name-link">rotate(BlockState, Rotation)</a> - Method in class com.cake.struts.content.block.<a href="com/cake/struts/content/block/StrutBlock.html" title="class in com.cake.struts.content.block">StrutBlock</a></dt>
@@ -1082,10 +1088,12 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="com/cake/struts/content/StrutModelType.html#%3Cinit%3E(net.minecraft.resources.ResourceLocation,net.minecraft.resources.ResourceLocation,int,int)" class="member-name-link">StrutModelType(ResourceLocation, ResourceLocation, int, int)</a> - Constructor for record class com.cake.struts.content.<a href="com/cake/struts/content/StrutModelType.html" title="class in com.cake.struts.content">StrutModelType</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="com/cake/struts/content/StrutModelType.html#%3Cinit%3E(net.minecraft.resources.ResourceLocation,net.minecraft.resources.ResourceLocation,int,int,int)" class="member-name-link">StrutModelType(ResourceLocation, ResourceLocation, int, int, int)</a> - Constructor for record class com.cake.struts.content.<a href="com/cake/struts/content/StrutModelType.html" title="class in com.cake.struts.content">StrutModelType</a></dt>
+<dt><a href="com/cake/struts/content/StrutModelType.html#%3Cinit%3E(net.minecraft.resources.ResourceLocation,net.minecraft.resources.ResourceLocation,int,int,int,java.util.function.Supplier)" class="member-name-link">StrutModelType(ResourceLocation, ResourceLocation, int, int, int, Supplier&lt;Supplier&lt;RenderType&gt;&gt;)</a> - Constructor for record class com.cake.struts.content.<a href="com/cake/struts/content/StrutModelType.html" title="class in com.cake.struts.content">StrutModelType</a></dt>
 <dd>
 <div class="block">Creates an instance of a <code>StrutModelType</code> record class.</div>
 </dd>
+<dt><a href="com/cake/struts/content/StrutModelType.html#%3Cinit%3E(net.minecraft.resources.ResourceLocation,net.minecraft.resources.ResourceLocation,java.util.function.Supplier)" class="member-name-link">StrutModelType(ResourceLocation, ResourceLocation, Supplier&lt;Supplier&lt;RenderType&gt;&gt;)</a> - Constructor for record class com.cake.struts.content.<a href="com/cake/struts/content/StrutModelType.html" title="class in com.cake.struts.content">StrutModelType</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="com/cake/struts/network/StrutPackets.html" class="type-name-link" title="class in com.cake.struts.network">StrutPackets</a> - Class in <a href="com/cake/struts/network/package-summary.html">com.cake.struts.network</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="com/cake/struts/network/StrutPackets.html#%3Cinit%3E()" class="member-name-link">StrutPackets()</a> - Constructor for class com.cake.struts.network.<a href="com/cake/struts/network/StrutPackets.html" title="class in com.cake.struts.network">StrutPackets</a></dt>
