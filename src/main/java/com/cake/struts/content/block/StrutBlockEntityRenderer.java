@@ -60,7 +60,7 @@ public class StrutBlockEntityRenderer implements BlockEntityRenderer<StrutBlockE
             return;
         }
 
-        final VertexConsumer consumer = buffer.getBuffer(RenderType.solid());
+        final VertexConsumer consumer = buffer.getBuffer(strutBlock.getModelType().getRenderType());
         final Function<Vector3f, Integer> lighter = blockEntity.createLighter();
 
         for (final BakedQuad quad : quads) {
