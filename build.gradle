@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
     id 'idea'
     id 'net.neoforged.moddev' version '2.0.140'
-    id 'me.modmuss50.mod-publish-plugin' version '1.1.0'
+    id 'me.modmuss50.mod-publish-plugin' version "2.1.1"
 }
 
 def isSnapshotVersioning = project.hasProperty('snapshot_versioning') && project.property('snapshot_versioning').toString().toBoolean()
@@ -178,6 +178,8 @@ publishMods {
         accessToken = findProperty('curseforgePublishToken')
         minecraftVersions.add("1.21.1")
         optional("flywheel")
+        client = true
+        server = true
     }
     modrinth {
         projectId = "sHO3MhQx"

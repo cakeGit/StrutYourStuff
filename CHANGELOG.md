@@ -53,3 +53,7 @@
 
 - Fix duplication issue but like for real this time
 - Fix click-through issue with struts on levels and for sub-levels
+
+# 1.21.1-1.3.0
+
+- Make it possible to specify the render type of strut models - (PR #4 thanks to george8188625)
