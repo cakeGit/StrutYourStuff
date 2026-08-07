@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public final class StrutMeshQuad {
+public class StrutMeshQuad {
 
     private final StrutVertex[] vertices;
     private final TextureAtlasSprite sprite;

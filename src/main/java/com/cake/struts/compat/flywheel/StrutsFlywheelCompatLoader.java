@@ -8,7 +8,7 @@ import net.neoforged.fml.ModList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class StrutsFlywheelCompatLoader {
+public class StrutsFlywheelCompatLoader {
 
     private static final String FLYWHEEL_ID = "flywheel";
     private static @Nullable Boolean flywheelLoaded;

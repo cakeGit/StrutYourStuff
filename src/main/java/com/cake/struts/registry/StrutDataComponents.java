@@ -27,6 +27,4 @@ public class StrutDataComponents {
         return type;
     }
 
-    private StrutDataComponents() {
-    }
 }

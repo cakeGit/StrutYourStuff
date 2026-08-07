@@ -24,6 +24,4 @@ public class StrutBlocks {
                             .strength(3f, 6f)
                             .sound(SoundType.NETHERITE_BLOCK)));
 
-    private StrutBlocks() {
-    }
 }

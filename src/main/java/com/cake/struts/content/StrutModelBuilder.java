@@ -95,7 +95,7 @@ public class StrutModelBuilder extends BakedModelWrapper<BakedModel> {
                 .toList();
     }
 
-    static final class GirderStrutModelData {
+    static class GirderStrutModelData {
         private final List<GirderConnection> connections;
         private final BlockPos pos;
 

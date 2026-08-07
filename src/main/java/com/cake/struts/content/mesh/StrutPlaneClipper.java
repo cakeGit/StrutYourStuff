@@ -12,7 +12,7 @@ import java.util.List;
  * Clips a list of vertices against a half-space defined by a plane point and normal,
  * collecting intersection edge segments for cap generation.
  */
-public final class StrutPlaneClipper {
+public class StrutPlaneClipper {
 
     /**
      * Result of clipping a polygon against a plane. Contains the surviving vertices

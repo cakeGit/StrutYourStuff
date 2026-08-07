@@ -16,7 +16,13 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DirectionalBlock;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.SimpleWaterloggedBlock;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -167,7 +173,7 @@ public abstract class StrutBlock extends Block implements SimpleWaterloggedBlock
                 final BlockPos otherPos = data.absoluteFrom(pos);
                 final BlockEntity otherBe = level.getBlockEntity(otherPos);
                 if (otherBe instanceof final StrutBlockEntity other) {
-                    other.removeConnection(pos);
+                    other.removeConnection(pos, false);
                     if (other.connectionCount() == 0) {
                         level.destroyBlock(otherPos, dropBlock);
                     }

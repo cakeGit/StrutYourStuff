@@ -42,7 +42,13 @@ public class StrutBreakerHelper {
                             stack
                     );
                 } else {
-                    player.addItem(stack);
+                    if (!player.addItem(stack)) {
+                        Block.popResource(
+                                level,
+                                BlockPos.containing(target.a().getCenter().lerp(target.b().getCenter(), 0.5)),
+                                stack
+                        );
+                    }
                 }
             }
         }
@@ -79,10 +85,10 @@ public class StrutBreakerHelper {
     private static void removeConnection(final @NotNull ServerLevel level, final @NotNull ConnectionKey key) {
         GirderStrutStructureShapes.unregisterConnection(level, key.a(), key.b());
         if (level.getBlockEntity(key.a()) instanceof final StrutBlockEntity strutA) {
-            strutA.removeConnection(key.b());
+            strutA.removeConnection(key.b(), false);
         }
         if (level.getBlockEntity(key.b()) instanceof final StrutBlockEntity strutB) {
-            strutB.removeConnection(key.a());
+            strutB.removeConnection(key.a(), false);
         }
     }
 

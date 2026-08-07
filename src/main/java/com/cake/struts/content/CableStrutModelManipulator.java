@@ -23,7 +23,7 @@ import java.util.List;
  * Stems from {@link StrutModelManipulator} to separate cable-specific logic.
  */
 @OnlyIn(Dist.CLIENT)
-public final class CableStrutModelManipulator {
+public class CableStrutModelManipulator {
 
     private static final double MIN_CABLE_STEP = 0.1;
     private static final double RENDER_START_EXTENSION = 0.0;

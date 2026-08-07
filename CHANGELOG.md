@@ -57,3 +57,8 @@
 # 1.21.1-1.3.0
 
 - Make it possible to specify the render type of strut models - (PR #4 thanks to george8188625)
+
+# 1.21.1-1.3.1
+
+- Fix item drop issue for like real this time (How does this keep happening??)
+- Fixed collision shapes being desynced on a dedicated server

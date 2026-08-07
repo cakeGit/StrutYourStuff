@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public final class CapAccumulator {
+public class CapAccumulator {
 
     private final ResourceLocation capTexture;
     private final List<CapSegment> segments = new ArrayList<>();
@@ -452,7 +452,7 @@ public final class CapAccumulator {
     private record CapSegment(CapVertex start, CapVertex end, int tintIndex, boolean shade) {
     }
 
-    private static final class CapVertex {
+    private static class CapVertex {
 
         private final Vector3f position;
         private final float u;
@@ -503,7 +503,7 @@ public final class CapAccumulator {
         }
     }
 
-    private static final class LoopEdge {
+    private static class LoopEdge {
 
         private final int start;
         private final int end;

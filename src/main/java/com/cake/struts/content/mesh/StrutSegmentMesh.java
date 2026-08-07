@@ -7,7 +7,7 @@ import net.minecraft.util.Mth;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class StrutSegmentMesh {
+public class StrutSegmentMesh {
 
     private final List<StrutMeshQuad> baseQuads;
 

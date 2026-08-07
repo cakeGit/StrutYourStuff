@@ -53,6 +53,4 @@ public class BakedQuadHelper {
         data[vertex * VERTEX_STRIDE + UV_OFFSET + 1] = Float.floatToRawIntBits(v);
     }
 
-    private BakedQuadHelper() {
-    }
 }

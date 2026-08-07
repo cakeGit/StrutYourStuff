@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public final class StrutGeometry {
+public class StrutGeometry {
 
     public static final float EPSILON = 1.0e-4f;
     public static final int DEFAULT_COLOR = 0xFFFFFFFF;

@@ -106,13 +106,13 @@ public class GirderStrutStructureBlock extends Block implements GirderStrutShape
                     GirderStrutStructureShapes.unregisterConnection(level, key.a(), key.b());
 
                     if (level.getBlockEntity(key.a()) instanceof final StrutBlockEntity strutA) {
-                        strutA.removeConnection(key.b());
+                        strutA.removeConnection(key.b(), false);
                         if (strutA.connectionCount() == 0) {
                             level.destroyBlock(key.a(), true);
                         }
                     }
                     if (level.getBlockEntity(key.b()) instanceof final StrutBlockEntity strutB) {
-                        strutB.removeConnection(key.a());
+                        strutB.removeConnection(key.a(), false);
                         if (strutB.connectionCount() == 0) {
                             level.destroyBlock(key.b(), true);
                         }

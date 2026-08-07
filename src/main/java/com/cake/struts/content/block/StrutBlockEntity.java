@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -82,7 +83,10 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     @Override
     public void onLoad() {
         super.onLoad();
-        if (this.level != null && !this.level.isClientSide) {
+        if (this.level == null) {
+            return;
+        }
+        if (!this.level.isClientSide) {
             final StrutModelType modelType = this.getBlockState().getBlock() instanceof final StrutBlock block ? block.getModelType() : DEFAULT_MODEL_TYPE;
             final boolean shouldRegisterShapes = this.shouldRegisterStructureShapes();
             for (final GirderConnectionNode data : this.connections) {
@@ -98,6 +102,8 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
                 }
             }
             this.tryResolveLegacyConnections();
+        } else {
+            this.syncStructureShapes();
         }
     }
 
@@ -122,8 +128,11 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
                     }
                 }
 
-            } else if (CLIENT_REMOVE_LISTENER != null) {
-                CLIENT_REMOVE_LISTENER.accept(this.level, this.getBlockPos());
+            } else {
+                this.unregisterAllStructureShapes();
+                if (CLIENT_REMOVE_LISTENER != null) {
+                    CLIENT_REMOVE_LISTENER.accept(this.level, this.getBlockPos());
+                }
             }
         }
         this.connectionQuadCache = null;
@@ -149,6 +158,10 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
     }
 
     public void removeConnection(final BlockPos pos) {
+        this.removeConnection(pos, true);
+    }
+
+    public void removeConnection(final BlockPos pos, final boolean dropIfEmpty) {
         GirderConnectionNode toRemove = null;
         final BlockPos relative = pos.subtract(this.getBlockPos());
         for (final GirderConnectionNode data : this.connections) {
@@ -164,12 +177,16 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
             }
             this.notifyModelChange();
         }
-        this.removeIfEmpty();
+        this.removeIfEmpty(dropIfEmpty);
     }
 
     private void removeIfEmpty() {
+        this.removeIfEmpty(true);
+    }
+
+    private void removeIfEmpty(final boolean drop) {
         if (this.connections.isEmpty() && this.unresolvedLegacyConnections.isEmpty() && !(this.level == null)) {
-            this.level.destroyBlock(this.getBlockPos(), true);
+            this.level.destroyBlock(this.getBlockPos(), drop);
         }
     }
 
@@ -323,6 +340,7 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
         this.loadAdditional(tag, registries);
         this.connectionQuadCache = null;
         if (this.level != null && this.level.isClientSide) {
+            this.syncStructureShapes();
             StrutsFlywheelCompatLoader.queueUpdate(this);
             if (CLIENT_UPDATE_LISTENER != null) {
                 CLIENT_UPDATE_LISTENER.accept(this.level, this);
@@ -387,6 +405,54 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
 
     private boolean shouldRegisterStructureShapes() {
         return !(this.getBlockState().getBlock() instanceof final StrutBlock block && block.getCableRenderInfo() != null);
+    }
+
+    /**
+     * Client-side mirror of the server's shape registration. Keeps the {@link GirderStrutStructureShapes}
+     * registry populated on the client so collision hitboxes exist when connected to a dedicated server.
+     * Idempotent, safe to call on every update tag.
+     */
+    private void syncStructureShapes() {
+        if (this.level == null || !this.level.isClientSide) {
+            return;
+        }
+        if (!this.shouldRegisterStructureShapes()) {
+            this.unregisterAllStructureShapes();
+            return;
+        }
+
+        final StrutModelType modelType = this.getModelType();
+        final Direction attachmentDirection = this.getAttachmentDirection();
+        final BlockPos pos = this.getBlockPos();
+        for (final GirderConnectionNode data : this.connections) {
+            if (this.registeredConnections.add(data)) {
+                GirderStrutStructureShapes.registerConnection(
+                        this.level,
+                        pos,
+                        attachmentDirection,
+                        data.absoluteFrom(pos),
+                        data.peerFacing(),
+                        modelType
+                );
+            }
+        }
+        for (final Iterator<GirderConnectionNode> iterator = this.registeredConnections.iterator(); iterator.hasNext(); ) {
+            final GirderConnectionNode data = iterator.next();
+            if (!this.connections.contains(data)) {
+                GirderStrutStructureShapes.unregisterConnection(this.level, pos, data.absoluteFrom(pos));
+                iterator.remove();
+            }
+        }
+    }
+
+    private void unregisterAllStructureShapes() {
+        if (this.level == null) {
+            return;
+        }
+        for (final GirderConnectionNode data : this.registeredConnections) {
+            GirderStrutStructureShapes.unregisterConnection(this.level, this.getBlockPos(), data.absoluteFrom(this.getBlockPos()));
+        }
+        this.registeredConnections.clear();
     }
 
     public void transform(final StructureTransform transform) {

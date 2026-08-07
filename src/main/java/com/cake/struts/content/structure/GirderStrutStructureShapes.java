@@ -19,7 +19,12 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Handler and storage for all the connections between girder struts in a level.
@@ -148,7 +153,7 @@ public class GirderStrutStructureShapes {
                 final boolean wasEmpty = pd.perConnectionShapes.isEmpty();
                 pd.add(key, shape);
 
-                if (!pos.equals(from) && !pos.equals(to) && wasEmpty) {
+                if (!pos.equals(from) && !pos.equals(to) && wasEmpty && !level.isClientSide) {
                     placeStructureBlockIfPossible(level, pos);
                 }
             }
@@ -168,7 +173,7 @@ public class GirderStrutStructureShapes {
                         if (!level.isLoaded(pos)) continue;
 
                         this.shapesByPosition.remove(pos);
-                        if (level.getBlockState(pos).getBlock() == StrutBlocks.GIRDER_STRUT_STRUCTURE.get()) {
+                        if (!level.isClientSide && level.getBlockState(pos).getBlock() == StrutBlocks.GIRDER_STRUT_STRUCTURE.get()) {
                             level.removeBlock(pos, false);
                         }
                     }
