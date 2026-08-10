@@ -14,3 +14,7 @@
 # 1.20.1-1.1.0+mc1.20.1
 
 - Backport
+
+# 1.20.1-1.1.1+mc1.20.1
+
+- Interactions with struts through walls no longer registered. - #3 (Thanks to @Excavon)
