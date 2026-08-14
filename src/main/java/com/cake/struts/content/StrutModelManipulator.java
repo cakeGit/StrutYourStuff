@@ -18,7 +18,6 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -53,23 +52,13 @@ public class StrutModelManipulator {
         final StrutSegmentMesh mesh = getSegmentMesh(modelType);
         final List<StrutMeshQuad> quads = mesh.forLength((float) renderLength);
 
-        final Vec3 dir = span.normalize();
-        final double distHorizontal = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
-        final float yRot = distHorizontal == 0 ? 0f : (float) Math.atan2(dir.x, dir.z);
-        final float xRot = (float) Math.atan2(dir.y, distHorizontal);
-
-        final PoseStack poseStack = new PoseStack();
-        poseStack.translate(connection.start().x, connection.start().y, connection.start().z);
-        poseStack.mulPose(new Quaternionf().rotationY(yRot));
-        poseStack.mulPose(new Quaternionf().rotationX(-xRot));
-        poseStack.translate(-0.5f, -0.5f, -0.5f);
-
+        final PoseStack poseStack = StrutGeometry.poseAlong(connection.start(), span.normalize());
         final PoseStack.Pose last = poseStack.last();
         final Matrix4f pose = new Matrix4f(last.pose());
         final Matrix3f normalMatrix = new Matrix3f(last.normal());
 
-        final Vector3f planePoint = toVector3f(connection.surfacePlanePoint());
-        final Vector3f planeNormal = toVector3f(connection.surfaceNormal());
+        final Vector3f planePoint = StrutGeometry.toVector3f(connection.surfacePlanePoint());
+        final Vector3f planeNormal = StrutGeometry.toVector3f(connection.surfaceNormal());
         if (planeNormal.lengthSquared() > StrutGeometry.EPSILON) {
             planeNormal.normalize();
         }
@@ -100,10 +89,6 @@ public class StrutModelManipulator {
             segmentMeshes.put(modelType, strutSegmentMesh = new StrutSegmentMesh(bakedQuads));
         }
         return strutSegmentMesh;
-    }
-
-    private static Vector3f toVector3f(final Vec3 vec) {
-        return new Vector3f((float) vec.x, (float) vec.y, (float) vec.z);
     }
 
     public static void invalidateMeshes() {

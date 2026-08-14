@@ -2,12 +2,14 @@ package com.cake.struts.content.geometry;
 
 import com.cake.struts.internal.util.BakedQuadHelper;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -20,6 +22,22 @@ public class StrutGeometry {
 
     public static final float EPSILON = 1.0e-4f;
     public static final int DEFAULT_COLOR = 0xFFFFFFFF;
+
+    public static Vector3f toVector3f(final Vec3 vec) {
+        return new Vector3f((float) vec.x, (float) vec.y, (float) vec.z);
+    }
+
+    public static PoseStack poseAlong(final Vec3 origin, final Vec3 direction) {
+        final double distHorizontal = Math.sqrt(direction.x * direction.x + direction.z * direction.z);
+        final float yRot = distHorizontal == 0 ? 0f : (float) Math.atan2(direction.x, direction.z);
+        final float xRot = (float) Math.atan2(direction.y, distHorizontal);
+        final PoseStack poseStack = new PoseStack();
+        poseStack.translate(origin.x, origin.y, origin.z);
+        poseStack.mulPose(new Quaternionf().rotationY(yRot));
+        poseStack.mulPose(new Quaternionf().rotationX(-xRot));
+        poseStack.translate(-0.5f, -0.5f, -0.5f);
+        return poseStack;
+    }
 
     public static float signedDistance(final Vector3f point, final Vector3f planeNormal, final Vector3f planePoint) {
         return new Vector3f(point).sub(planePoint).dot(planeNormal);

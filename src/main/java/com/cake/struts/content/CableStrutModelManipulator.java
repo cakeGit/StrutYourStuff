@@ -12,7 +12,6 @@ import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
-import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -61,8 +60,8 @@ public class CableStrutModelManipulator {
             return List.of();
         }
 
-        final Vector3f planePoint = toVector3f(connection.surfacePlanePoint());
-        final Vector3f planeNormal = toVector3f(connection.surfaceNormal());
+        final Vector3f planePoint = StrutGeometry.toVector3f(connection.surfacePlanePoint());
+        final Vector3f planeNormal = StrutGeometry.toVector3f(connection.surfaceNormal());
         if (planeNormal.lengthSquared() > StrutGeometry.EPSILON) {
             planeNormal.normalize();
         }
@@ -79,16 +78,7 @@ public class CableStrutModelManipulator {
             }
 
             final Vec3 dir = segmentDelta.normalize();
-            final double distHorizontal = Math.sqrt(dir.x * dir.x + dir.z * dir.z);
-            final float yRot = distHorizontal == 0 ? 0f : (float) Math.atan2(dir.x, dir.z);
-            final float xRot = (float) Math.atan2(dir.y, distHorizontal);
-
-            final Vec3 segmentOrigin = segment.start().add(dir.scale(0.5));
-            final PoseStack poseStack = new PoseStack();
-            poseStack.translate(segmentOrigin.x, segmentOrigin.y, segmentOrigin.z);
-            poseStack.mulPose(new Quaternionf().rotationY(yRot));
-            poseStack.mulPose(new Quaternionf().rotationX(-xRot));
-            poseStack.translate(-0.5f, -0.5f, -0.5f);
+            final PoseStack poseStack = StrutGeometry.poseAlong(segment.start().add(dir.scale(0.5)), dir);
 
             final PoseStack.Pose last = poseStack.last();
             final Matrix4f pose = new Matrix4f(last.pose());
@@ -167,10 +157,6 @@ public class CableStrutModelManipulator {
         final Vec3 base = start.add(delta.scale(t));
         final double sagFactor = 4.0 * t * (1.0 - t);
         return base.add(0.0, -sagDistance * sagFactor, 0.0);
-    }
-
-    private static Vector3f toVector3f(final Vec3 vec) {
-        return new Vector3f((float) vec.x, (float) vec.y, (float) vec.z);
     }
 
     private record CableSegment(Vec3 start, Vec3 end) {

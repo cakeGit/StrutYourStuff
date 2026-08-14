@@ -3,6 +3,7 @@ package com.cake.struts.content.shape;
 import com.cake.struts.content.StrutModelBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SurfaceClippingHelper {
+
+    public static final double INTERSECTION_EPSILON = 1e-9;
+    public static final double MIN_LENGTH_SQR = 1e-12;
 
     public record SurfacePlane(Vec3 point, Vec3 normal) {
     }
@@ -119,5 +123,73 @@ public class SurfaceClippingHelper {
         }
 
         return result;
+    }
+
+    public static double intersectRayWithObb(final Vec3 rayOrigin, final Vec3 rayDir,
+                                             final Vec3 boxCenter,
+                                             final Vec3 axisX, final Vec3 axisY, final Vec3 axisZ,
+                                             final double halfX, final double halfY, final double halfZ) {
+        final Vec3 p = rayOrigin.subtract(boxCenter);
+        final double[] range = {0.0, 1.0};
+
+        if (!clipAxis(p.dot(axisX), rayDir.dot(axisX), halfX, range)) return Double.NaN;
+        if (!clipAxis(p.dot(axisY), rayDir.dot(axisY), halfY, range)) return Double.NaN;
+        if (!clipAxis(p.dot(axisZ), rayDir.dot(axisZ), halfZ, range)) return Double.NaN;
+
+        if (range[1] < 0.0 || range[0] > 1.0) return Double.NaN;
+
+        final boolean originInside = Math.abs(p.dot(axisX)) <= halfX
+                && Math.abs(p.dot(axisY)) <= halfY
+                && Math.abs(p.dot(axisZ)) <= halfZ;
+
+        final double entry = Mth.clamp(range[0], 0.0, 1.0);
+        final double exit = Mth.clamp(range[1], 0.0, 1.0);
+        return originInside ? exit : entry;
+    }
+
+    private static boolean clipAxis(final double originProj, final double dirProj,
+                                    final double halfExtent, final double[] range) {
+        if (Math.abs(dirProj) < INTERSECTION_EPSILON) {
+            return Math.abs(originProj) <= halfExtent;
+        }
+
+        double tMin = (-halfExtent - originProj) / dirProj;
+        double tMax = (halfExtent - originProj) / dirProj;
+        if (tMin > tMax) {
+            final double tmp = tMin;
+            tMin = tMax;
+            tMax = tmp;
+        }
+
+        range[0] = Math.max(range[0], tMin);
+        range[1] = Math.min(range[1], tMax);
+        return range[0] <= range[1];
+    }
+
+    public static List<Vec3> getCorners(final Vec3 center, final Vec3 u, final Vec3 v,
+                                        final float hw, final float hh) {
+        final Vec3 us = u.scale(hw);
+        final Vec3 vs = v.scale(hh);
+        return List.of(
+                center.add(us).add(vs),
+                center.add(us).subtract(vs),
+                center.subtract(us).subtract(vs),
+                center.subtract(us).add(vs)
+        );
+    }
+
+    public static Vec3 safeDirection(final Vec3 vec) {
+        if (vec.lengthSqr() < MIN_LENGTH_SQR) {
+            return new Vec3(1.0, 0.0, 0.0);
+        }
+        return vec.normalize();
+    }
+
+    public static Vec3 perpendicularUnit(final Vec3 tangent) {
+        Vec3 candidate = new Vec3(0.0, 1.0, 0.0).cross(tangent);
+        if (candidate.lengthSqr() < MIN_LENGTH_SQR) {
+            candidate = new Vec3(1.0, 0.0, 0.0).cross(tangent);
+        }
+        return safeDirection(candidate);
     }
 }

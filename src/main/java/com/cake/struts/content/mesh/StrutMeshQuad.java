@@ -8,7 +8,6 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
-import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -39,8 +38,8 @@ public class StrutMeshQuad {
         final int stride = BakedQuadHelper.VERTEX_STRIDE;
         final StrutVertex[] vertices = new StrutVertex[4];
         for (int i = 0; i < 4; i++) {
-            final Vector3f pos = toVector3f(BakedQuadHelper.getXYZ(data, i));
-            final Vector3f normal = toVector3f(BakedQuadHelper.getNormalXYZ(data, i));
+            final Vector3f pos = StrutGeometry.toVector3f(BakedQuadHelper.getXYZ(data, i));
+            final Vector3f normal = StrutGeometry.toVector3f(BakedQuadHelper.getNormalXYZ(data, i));
             final float u = BakedQuadHelper.getU(data, i);
             final float v = BakedQuadHelper.getV(data, i);
             final int baseIndex = stride * i;
@@ -258,9 +257,5 @@ public class StrutMeshQuad {
             transformed.add(new StrutVertex(position, normal, vertex.u(), vertex.v(), vertex.color(), vertex.light()));
         }
         return transformed;
-    }
-
-    private static Vector3f toVector3f(final Vec3 vec) {
-        return new Vector3f((float) vec.x, (float) vec.y, (float) vec.z);
     }
 }
