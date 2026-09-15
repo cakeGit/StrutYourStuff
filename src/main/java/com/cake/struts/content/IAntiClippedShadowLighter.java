@@ -22,29 +22,29 @@ public interface IAntiClippedShadowLighter {
     BlockPos getBlockPos();
 
     default Function<Vector3f, Integer> createLighter() {
-        return createLighter(getBlockPos());
+        return this.createLighter(this.getBlockPos());
     }
 
     default Function<Vector3f, Integer> createLighter(final BlockPos blockPos) {
         return (position) -> {
-            if (getLevel() == null) return LightTexture.FULL_BRIGHT;
+            if (this.getLevel() == null) return LightTexture.FULL_BRIGHT;
             final Matrix4f lightTransform = new Matrix4f().translate(blockPos.getX(), blockPos.getY(), blockPos.getZ());
             final Vector3f lightPosition = lightTransform.transformPosition(position, new Vector3f());
             final List<BlockPos> positions = getClosePositions(lightPosition.x, lightPosition.y, lightPosition.z);
             return positions
                     .stream()
-                    .map(p -> LevelRenderer.getLightColor(getLevel(), p))
+                    .map(p -> LevelRenderer.getLightColor(this.getLevel(), p))
                     .reduce(0, IAntiClippedShadowLighter::maximizeLight);
         };
     }
 
     default Function<Vector3f, Integer> createGlobalLighter() {
         return (position) -> {
-            if (getLevel() == null) return LightTexture.FULL_BRIGHT;
+            if (this.getLevel() == null) return LightTexture.FULL_BRIGHT;
             final List<BlockPos> positions = getClosePositions(position.x, position.y, position.z);
             return positions
                     .stream()
-                    .map(p -> LevelRenderer.getLightColor(getLevel(), p))
+                    .map(p -> LevelRenderer.getLightColor(this.getLevel(), p))
                     .reduce(0, IAntiClippedShadowLighter::maximizeLight);
         };
     }
@@ -79,14 +79,19 @@ public interface IAntiClippedShadowLighter {
         return positions;
     }
 
-    static int maximizeLight(final int lightA, final int lightB) {
-        final int blockA = lightA & 0xFFFF;
-        final int skyA = (lightA >>> 16) & 0xFFFF;
-        final int blockB = lightB & 0xFFFF;
-        final int skyB = (lightB >>> 16) & 0xFFFF;
-        final int block = Math.max(blockA, blockB);
-        final int sky = Math.max(skyA, skyB);
-        return (sky << 16) | block;
+    static int maximizeLight(final int a, final int b) {
+        final int blockA = (a >> 4) & 15;
+        final int blockB = (b >> 4) & 15;
+        final int skyA = (a >> 20) & 15;
+        final int skyB = (b >> 20) & 15;
+        if (blockA >= blockB && skyA >= skyB) {
+            return a;
+        }
+        if (blockB >= blockA && skyB >= skyA) {
+            return b;
+        }
+        final int brighter = blockA >= blockB ? a : b;
+        return (brighter & ~(15 << 20)) | (Math.max(skyA, skyB) << 20);
     }
 
 }
