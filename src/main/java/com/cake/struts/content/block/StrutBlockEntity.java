@@ -66,12 +66,14 @@ public class StrutBlockEntity extends BlockEntity implements IAntiClippedShadowL
         if (this.level == null) return;
         if (this.checkNextTick && !this.level.isClientSide) {
             this.checkNextTick = false;
-            for (final GirderConnectionNode conn : this.connections) {
+            // Copy: removeConnection() mutates this.connections, iterating the live set threw
+            // ConcurrentModificationException as soon as two stale connections were found.
+            for (final GirderConnectionNode conn : List.copyOf(this.connections)) {
                 final BlockPos other = conn.absoluteFrom(this.getBlockPos());
                 if (!this.level.isLoaded(other)) continue;
                 if ((this.level.getBlockEntity(other) instanceof final StrutBlockEntity otherBE)) {
                     if (otherBE.connections.stream().anyMatch(c -> c.absoluteFrom(other).equals(this.getBlockPos()))) {
-                        return;
+                        continue;
                     }
                 }
                 this.removeConnection(other);
